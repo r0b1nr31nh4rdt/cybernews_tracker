@@ -15,15 +15,23 @@ jwt = JWTManager(app)
 def hello():
     return render_template("index.html")
 
-@app.route("/login", methods=["POST"])
-def login():
-    username = request.json.get("username")
-    password = request.json.get("password")
-    user = verify_user(username, password)
-    if user:
-        token = create_access_token(identity=user)
-        return jsonify(access_token=token)
-    return jsonify({"msg": "Invalid credentials"}), 401
+@app.route("/admin")
+def show_admin():
+    return render_template("admin.html")
+
+@app.route("/login")
+def show_login():
+    return render_template("login.html")
+
+# @app.route("/login", methods=["POST"])
+# def login():
+#     username = request.json.get("username")
+#     password = request.json.get("password")
+#     user = verify_user(username, password)
+#     if user:
+#         token = create_access_token(identity=user)
+#         return jsonify(access_token=token)
+#     return jsonify({"msg": "Invalid credentials"}), 401
 
 if __name__ == "__main__":
     init_db()
