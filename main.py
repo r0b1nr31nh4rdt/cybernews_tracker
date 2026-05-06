@@ -23,6 +23,14 @@ def show_admin():
 def show_login():
     return render_template("login.html")
 
+@app.route("/user/<username>")
+def profile(username):
+    return render_template("profile.html",
+        username=username,
+        language="Python",
+        hobbies=["Reading", "Gaming", "Traveling"]
+    )
+
 # @app.route("/login", methods=["POST"])
 # def login():
 #     username = request.json.get("username")

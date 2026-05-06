@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - {{ username }}{% endblock %}
+
+{% block content %}
+    <h1>Welcome, {{ username }}!</h1>
+    <p>Your favorite language is: {{ language }}</p>
+        <ul>
+            {% for hobby in hobbies %}
+                <li>{{ hobby }}</li>
+            {% endfor %}
+        </ul>
+{% endblock %}
