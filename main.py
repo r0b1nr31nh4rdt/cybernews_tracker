@@ -1,30 +1,21 @@
-from flask import Flask, render_template, request
-from flask_jwt_extended import JWTManager, create_access_token
-from database import init_db
-from auth import verify_user
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-jwt = JWTManager(app)
+from flask import Flask
 
 @app.route("/")
-def hello():
-    return render_template("index.html")
+def return_string():
+    return "Welcome to the Route Master Home Page!"
 
-@app.route("/login", methods=["POST"])
-def login():
-    username = request.json.get("username")
-    password = request.json.get("password")
-    user = verify_user(username, password)
-    if user:
-        token = create_access_token(identity=user)
-        return jsonify(access_token=token)
-    return jsonify({"msg": "Invalid credentials"}), 401
+@app.route("/status")
+def return_status():
+    return "Application is running."
+
+@app.route("/greet/<name>")
+def return_greeting(name):
+    return f"Hello, {name}!"
+
+@app.route("/calculate/add/<int:num1>/<int:num2>")
+def calculate_add(num1, num2):
+    result = num1 + num2
+    return f"The sum of {num1} and {num2} is {result}."
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
