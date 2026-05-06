@@ -1,3 +1,6 @@
+# Secrets
+.env
+
 # macOS
 .DS_Store
 .AppleDouble
@@ -11,3 +14,21 @@
 .vscode/
 *.code-workspace
 .history/
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+dist/
+build/
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
