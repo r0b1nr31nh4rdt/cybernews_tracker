@@ -1,11 +1,15 @@
 import sqlite3
 import bcrypt
+import json
 
 DB_PATH = "users.db"
+
+# ── Init ──────────────────────────────────────────────
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,
@@ -14,8 +18,50 @@ def init_db():
             role TEXT
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER UNIQUE,
+            language TEXT,
+            hobbies TEXT,
+            settings TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS news_sources (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            rss_url TEXT,
+            category TEXT,
+            active INTEGER DEFAULT 1
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS streams (
+            id INTEGER PRIMARY KEY,
+            name TEXT,
+            youtube_url TEXT
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_favorites (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER,
+            source_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (source_id) REFERENCES news_sources (id)
+        )
+    """)
+
     conn.commit()
     conn.close()
+
+# ── Users ─────────────────────────────────────────────
 
 def create_user(username, password, role="analyst"):
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
@@ -23,8 +69,10 @@ def create_user(username, password, role="analyst"):
     cursor = conn.cursor()
     cursor.execute("INSERT INTO users VALUES (?, ?, ?, ?)",
                    (None, username, hashed, role))
+    user_id = cursor.lastrowid
     conn.commit()
     conn.close()
+    return user_id
 
 def get_user(username):
     conn = sqlite3.connect(DB_PATH)
@@ -33,3 +81,173 @@ def get_user(username):
     user = cursor.fetchone()
     conn.close()
     return user
+
+def get_all_users():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, role FROM users")
+    users = cursor.fetchall()
+    conn.close()
+    return users
+
+def delete_user(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    cursor.execute("DELETE FROM user_profiles WHERE user_id = ?", (user_id,))
+    cursor.execute("DELETE FROM user_favorites WHERE user_id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+# ── User Profiles ─────────────────────────────────────
+
+def create_user_profile(user_id, language=None, hobbies=None, settings=None):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO user_profiles VALUES (?, ?, ?, ?, ?)",
+                   (None, user_id,
+                    language,
+                    json.dumps(hobbies or []),
+                    json.dumps(settings or {})))
+    conn.commit()
+    conn.close()
+
+def get_user_profile(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM user_profiles WHERE user_id = ?", (user_id,))
+    profile = cursor.fetchone()
+    conn.close()
+    if profile:
+        return {
+            "language": profile[2],
+            "hobbies": json.loads(profile[3]),
+            "settings": json.loads(profile[4])
+        }
+    return None
+
+def update_user_profile(user_id, language=None, hobbies=None, settings=None):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE user_profiles
+        SET language = ?, hobbies = ?, settings = ?
+        WHERE user_id = ?
+    """, (language, json.dumps(hobbies or []), json.dumps(settings or {}), user_id))
+    conn.commit()
+    conn.close()
+
+# ── News Sources ──────────────────────────────────────
+
+def add_news_source(name, rss_url, category):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO news_sources VALUES (?, ?, ?, ?, ?)",
+                   (None, name, rss_url, category, 1))
+    conn.commit()
+    conn.close()
+
+def get_news_sources(only_active=True):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    if only_active:
+        cursor.execute("SELECT * FROM news_sources WHERE active = 1")
+    else:
+        cursor.execute("SELECT * FROM news_sources")
+    sources = cursor.fetchall()
+    conn.close()
+    return sources
+
+def toggle_news_source(source_id, active):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE news_sources SET active = ? WHERE id = ?",
+                   (1 if active else 0, source_id))
+    conn.commit()
+    conn.close()
+
+def delete_news_source(source_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM news_sources WHERE id = ?", (source_id,))
+    cursor.execute("DELETE FROM user_favorites WHERE source_id = ?", (source_id,))
+    conn.commit()
+    conn.close()
+
+# ── Streams ───────────────────────────────────────────
+
+def add_stream(name, youtube_url):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO streams VALUES (?, ?, ?)",
+                   (None, name, youtube_url))
+    conn.commit()
+    conn.close()
+
+def get_streams():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM streams")
+    streams = cursor.fetchall()
+    conn.close()
+    return streams
+
+def delete_stream(stream_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM streams WHERE id = ?", (stream_id,))
+    conn.commit()
+    conn.close()
+
+# ── User Favorites ────────────────────────────────────
+
+def add_favorite(user_id, source_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO user_favorites VALUES (?, ?, ?)",
+                   (None, user_id, source_id))
+    conn.commit()
+    conn.close()
+
+def get_favorites(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT ns.* FROM news_sources ns
+        JOIN user_favorites uf ON ns.id = uf.source_id
+        WHERE uf.user_id = ?
+    """, (user_id,))
+    favorites = cursor.fetchall()
+    conn.close()
+    return favorites
+
+def remove_favorite(user_id, source_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM user_favorites WHERE user_id = ? AND source_id = ?",
+                   (user_id, source_id))
+    conn.commit()
+    conn.close()
+
+# ── Watchlist ──────────────────────────────────────
+
+def get_watchlist(user_id):
+    profile = get_user_profile(user_id)
+    if not profile:
+        return []
+    settings = profile.get("settings", {})
+    return settings.get("watchlist", [])
+
+def save_watchlist(user_id, watchlist):
+    profile = get_user_profile(user_id)
+    if not profile:
+        create_user_profile(user_id, settings={"watchlist": watchlist})
+        return
+    settings = profile.get("settings", {})
+    settings["watchlist"] = watchlist
+    update_user_profile(
+        user_id,
+        language=profile.get("language"),
+        hobbies=profile.get("hobbies", []),
+        settings=settings
+    )

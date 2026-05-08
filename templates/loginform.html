@@ -1,0 +1,22 @@
+<!-- login.html -->
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Welcome!</h1>
+    <main>
+        <form id="login-form">
+            <label for="username">Benutzername</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Passwort</label>
+            <input type="password" id="password" name="password" required>
+
+            <button type="submit">Einloggen</button>
+            <p id="login-error" style="color:red"></p>
+        </form>
+    </main>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/login.js"></script>
+{% endblock %}

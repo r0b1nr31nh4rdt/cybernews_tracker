@@ -1,0 +1,18 @@
+<!-- cookie_check.html -->
+{% extends "base.html" %}
+
+{% block title %}Cookie Check – CyberNews Tracker{% endblock %}
+
+{% block content %}
+    <h1>Cookie Check</h1>
+    <main>
+        <p>Want to see what cookies are stored in your browser for this site?</p>
+        <ol>
+            <li>Open your browser's Developer Tools by pressing <strong>F12</strong> (or <strong>Cmd + Option + I</strong> on Mac).</li>
+            <li>Click on the <strong>Console</strong> tab.</li>
+            <li>Type the following command and press <strong>Enter</strong>:</li>
+        </ol>
+        <pre><code>document.cookie</code></pre>
+        <p>The console will display all cookies accessible to this page.</p>
+    </main>
+{% endblock %}

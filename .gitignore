@@ -1,6 +1,9 @@
 # Secrets
 .env
 
+# Datenbank
+users.db
+
 # macOS
 .DS_Store
 .AppleDouble
