@@ -1,6 +1,11 @@
 # Secrets
 .env
 
+# Claude
+.claude/
+briefing*
+**/briefing*
+
 # Datenbank
 users.db
 
