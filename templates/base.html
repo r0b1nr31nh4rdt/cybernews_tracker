@@ -6,21 +6,28 @@
             {% block title %}CyberNews Tracker{% endblock %}
         </title>
         <link rel="stylesheet" href="/static/style.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
     </head>
     <body>
-        <header>CyberNews Tracker
+        <header>
+            <span class="logo">CyberNews Tracker</span>
             <nav>
-                <ul>
-                    <li>
-                        <a href="/">Dashboard</a>
-                    </li>
-                    <li>
-                        <a href="/login">Login</a>
-                    </li>
-                    <li>
-                        <a href="/admin">Admin</a>
-                    </li>
-                </ul>
+                <input type="text" id="nav-search" placeholder="Suche..." />
+                <select id="nav-filter">
+                    <option value="all">Alle Themen</option>
+                    <option value="security">Security</option>
+                    <option value="geopolitics">Geopolitik</option>
+                    <option value="science">Wissenschaft</option>
+                    <option value="networks">Netzwerke</option>
+                    <option value="financial">Finanzen</option>
+                </select>
+                <select id="lang-toggle">
+                    <option value="de">🇩🇪 DE / €</option>
+                    <option value="us">🇺🇸 US / $</option>
+                </select>
+                <a href="/admin" id="admin-link" style="display:none">Admin</a>
+                <a href="/login" id="login-link" style="display:none">Login</a>
+                <a href="#" id="logout-link" style="display:none">Logout</a>
             </nav>
         </header>
 
@@ -30,6 +37,54 @@
         <script>
             document.querySelector("footer").textContent = `© ${new Date().getFullYear()} CyberNews Tracker`;
         </script>
+        <script>
+            const langToggle = document.getElementById("lang-toggle");
+            if (langToggle) {
+                langToggle.value = localStorage.getItem("lang") || "de";
+                langToggle.addEventListener("change", () => {
+                    localStorage.setItem("lang", langToggle.value);
+                });
+            }
+        </script>
+        <script>
+            (async () => {
+                const token = localStorage.getItem("token");
+                const loginLink  = document.getElementById("login-link");
+                const logoutLink = document.getElementById("logout-link");
+                const adminLink  = document.getElementById("admin-link");
+
+                if (!token) {
+                    if (loginLink) loginLink.style.display = "inline";
+                    return;
+                }
+
+                const res = await fetch("/api/me", {
+                    headers: { Authorization: "Bearer " + token }
+                });
+
+                if (!res.ok) {
+                    localStorage.removeItem("token");
+                    if (loginLink) loginLink.style.display = "inline";
+                    return;
+                }
+
+                const me = await res.json();
+                if (logoutLink) logoutLink.style.display = "inline";
+                if (adminLink && me.role === "admin") adminLink.style.display = "inline";
+
+                if (logoutLink) {
+                    logoutLink.addEventListener("click", async (e) => {
+                        e.preventDefault();
+                        await fetch("/api/logout", { method: "POST" });
+                        localStorage.removeItem("token");
+                        window.location.href = "/login";
+                    });
+                }
+            })();
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
         {% block scripts %}
         {% endblock %}
     </body>

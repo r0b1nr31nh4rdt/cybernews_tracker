@@ -1,13 +1,109 @@
-<!-- index.html -->
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Welcome!</h1>
-    <main>
-        Latest cybersecurity updates will appear here soon
-    </main>
+<main id="dashboard">
+    <div id="grid-top" class="grid-row sortable-grid">
+        <div class="module module--half" data-id="map">
+            <div class="module__header">
+                <span class="module__title">Karte</span>
+            </div>
+            <div class="module__body" style="padding:0">
+                <div id="map-container" style="height:100%; min-height:260px;"></div>
+            </div>
+        </div>
+
+        <div class="module module--quarter" data-id="stream">
+            <div class="module__header">
+                <span class="module__title" id="stream-title">Livestream</span>
+            </div>
+            <div class="module__body stream-module">
+                <video id="stream-player" controls muted autoplay playsinline></video>
+                <div id="stream-buttons"></div>
+                <div id="stream-error" style="display:none">
+                    ⚠️ Stream nicht verfügbar
+                </div>
+            </div>
+        </div>
+
+        <div class="module module--quarter" data-id="weather-stocks">
+            <div class="module__header">
+                <span class="module__title">Wetter & Kurse</span>
+            </div>
+            <div class="module__body" style="padding:0; display:flex; flex-direction:column;">
+
+                <!-- Wetter-Widget -->
+                <div id="weather-widget">
+                    <div id="weather-search">
+                        <input type="text" id="weather-plz"
+                            placeholder="PLZ eingeben..."
+                            maxlength="5"
+                            pattern="[0-9]{5}" />
+                    </div>
+                    <div id="weather-current">
+                        <span id="weather-icon">—</span>
+                        <span id="weather-temp">—</span>
+                        <span id="weather-location">Kein Ort gewählt</span>
+                        <div id="weather-details">
+                            <span id="weather-feels">Gefühlt: —</span>
+                            <span id="weather-wind">💨 —</span>
+                            <span id="weather-humidity">💧 —</span>
+                        </div>
+                    </div>
+                    <div id="weather-forecast"></div>
+                    <div id="weather-error" style="display:none">⚠️ Ort nicht gefunden</div>
+                </div>
+
+                <!-- Kurstracker -->
+                <div id="stocks-widget">
+                    <div id="stocks-header">
+                        <span class="stocks-label">Kurse</span>
+                        <div id="stocks-add">
+                            <input type="text" id="stocks-input"
+                                placeholder="Symbol (z.B. AAPL, BTC/USD)"
+                                maxlength="12" />
+                            <button id="stocks-add-btn">+</button>
+                        </div>
+                    </div>
+                    <div id="stocks-list"></div>
+                    <div id="stocks-empty" style="display:none">
+                        Noch keine Symbole — oben hinzufügen
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div id="grid-bottom" class="grid-row sortable-grid">
+        <div class="module module--half" data-id="headlines">
+            <div class="module__header">
+                <span class="module__title">Headlines</span>
+            </div>
+            <div class="module__body">
+                <div class="placeholder" style="background:#1a2a3a">
+                    📰 Headlines (Briefing 08+09)
+                </div>
+            </div>
+        </div>
+
+        <div class="module module--half" data-id="article">
+            <div class="module__header">
+                <span class="module__title">Artikel</span>
+            </div>
+            <div class="module__body">
+                <div class="placeholder" style="background:#2a2a1a">
+                    📄 Artikel-Viewer (Briefing 09)
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 {% endblock %}
 
 {% block scripts %}
     <script src="/static/dashboard.js"></script>
+    <script src="/static/map.js"></script>
+    <script src="/static/stream.js"></script>
+    <script src="/static/weather.js"></script>
+    <script src="/static/stocks.js"></script>
 {% endblock %}

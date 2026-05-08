@@ -228,3 +228,26 @@ def remove_favorite(user_id, source_id):
                    (user_id, source_id))
     conn.commit()
     conn.close()
+
+# ── Watchlist ──────────────────────────────────────
+
+def get_watchlist(user_id):
+    profile = get_user_profile(user_id)
+    if not profile:
+        return []
+    settings = profile.get("settings", {})
+    return settings.get("watchlist", [])
+
+def save_watchlist(user_id, watchlist):
+    profile = get_user_profile(user_id)
+    if not profile:
+        create_user_profile(user_id, settings={"watchlist": watchlist})
+        return
+    settings = profile.get("settings", {})
+    settings["watchlist"] = watchlist
+    update_user_profile(
+        user_id,
+        language=profile.get("language"),
+        hobbies=profile.get("hobbies", []),
+        settings=settings
+    )
