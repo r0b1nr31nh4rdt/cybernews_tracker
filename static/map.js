@@ -12,7 +12,9 @@ function initMap() {
         maxZoom: 6,
         zoomControl: true,
         attributionControl: false,
-        worldCopyJump: false,
+        worldCopyJump: true,
+        maxBounds: [[-90, -180], [90, 180]],
+        maxBoundsViscosity: 1.0,
     });
 
     container.style.background = "#4a4a4a";
@@ -24,6 +26,7 @@ function initMap() {
                 style: countryStyle,
                 onEachFeature: onEachCountry
             }).addTo(map);
+            map.fitBounds(geojsonLayer.getBounds(), { padding: [10, 10] });
         })
         .catch(err => console.error("GeoJSON Ladefehler:", err));
 }
@@ -73,7 +76,8 @@ function onEachCountry(feature, layer) {
 }
 
 function resizeMap() {
-    if (map) map.invalidateSize();
+    if (!map) return;
+    map.invalidateSize();
 }
 
 window.CyberMap = { init: initMap, resize: resizeMap };

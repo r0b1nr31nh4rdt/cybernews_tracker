@@ -129,17 +129,32 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
     cursor: grabbing !important;
 }
 
-.module::after {
-    content: "";
+.resize-handle {
     position: absolute;
-    right: 0;
-    top: 20%;
-    height: 60%;
-    width: 4px;
-    background: transparent;
-    border-radius: 2px;
-    transition: background 0.2s;
-    cursor: col-resize;
+    bottom: 4px;
+    width: 14px;
+    height: 14px;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.module:hover .resize-handle {
+    opacity: 1;
+}
+
+.resize-handle--left {
+    left: 4px;
+    border-left: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 0 0 0 3px;
+}
+
+.resize-handle--right {
+    right: 4px;
+    border-right: 2px solid var(--accent);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 0 0 3px 0;
 }
 
 .module:hover::after {
