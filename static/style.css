@@ -119,6 +119,31 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
     display: flex;
     flex-direction: column;
     min-height: 280px;
+    position: relative;
+    touch-action: none;
+    user-select: none;
+}
+
+/* ── Interact.js Drag & Resize ───────────────────── */
+.module--dragging {
+    cursor: grabbing !important;
+}
+
+.module::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 20%;
+    height: 60%;
+    width: 4px;
+    background: transparent;
+    border-radius: 2px;
+    transition: background 0.2s;
+    cursor: col-resize;
+}
+
+.module:hover::after {
+    background: var(--border);
 }
 
 .module--half    { flex: 2; }
