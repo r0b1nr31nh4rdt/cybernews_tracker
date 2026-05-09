@@ -11,6 +11,7 @@ from database import (
     get_streams, add_stream, delete_stream,
     get_all_users, get_user_by_id, update_user_role, delete_user,
     log_login_attempt, get_audit_log, cleanup_audit_log,
+    get_grid_state, save_grid_state,
 )
 from news_collector import get_articles
 from auth import verify_user
@@ -190,6 +191,31 @@ def save_language():
             settings=profile.get("settings", {})
         )
     return jsonify({"language": lang})
+
+# --- Grid State API ---
+
+@app.route("/api/profile/grid", methods=["GET"])
+@jwt_required()
+def get_grid():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"grid": None})
+    state = get_grid_state(db_user[0])
+    return jsonify({"grid": state})
+
+@app.route("/api/profile/grid", methods=["POST"])
+@jwt_required()
+def save_grid():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+    grid_state = request.json.get("grid", {})
+    save_grid_state(db_user[0], grid_state)
+    return jsonify({"success": True})
 
 # --- Watchlist API ---
 

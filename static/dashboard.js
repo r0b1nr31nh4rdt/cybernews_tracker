@@ -21,6 +21,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (window.CyberLogin) window.CyberLogin.updateNav(me);
 
+    // Grid-State laden und anwenden
+    if (window.GridState) {
+        await window.GridState.load();
+        window.GridState.apply();
+    }
+
     for (const [name, mod] of [
         ["CyberGrid",    window.CyberGrid],
         ["CyberMap",     window.CyberMap],
@@ -36,4 +42,52 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.error(name + " init fehlgeschlagen:", e);
         }
     }
+
+    // X-Button auf Modulen
+    document.querySelectorAll(".module__close").forEach(btn => {
+        btn.addEventListener("click", () => {
+            if (window.GridState) window.GridState.hide(btn.dataset.module);
+        });
+    });
+
+    // Settings-Panel
+    const settingsBtn      = document.getElementById("settings-btn");
+    const settingsPanel    = document.getElementById("settings-panel");
+    const settingsClose    = document.getElementById("settings-close");
+    const settingsBackdrop = document.getElementById("settings-backdrop");
+
+    settingsBtn?.addEventListener("click", () => {
+        if (settingsPanel) settingsPanel.style.display = "flex";
+    });
+
+    settingsClose?.addEventListener("click", () => {
+        if (settingsPanel) settingsPanel.style.display = "none";
+    });
+
+    settingsBackdrop?.addEventListener("click", () => {
+        if (settingsPanel) settingsPanel.style.display = "none";
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && settingsPanel?.style.display !== "none") {
+            settingsPanel.style.display = "none";
+        }
+    });
+
+    document.querySelectorAll("#module-checklist input[type=checkbox]")
+        .forEach(cb => {
+            cb.addEventListener("change", () => {
+                const moduleId = cb.dataset.module;
+                if (cb.checked) {
+                    window.GridState?.show(moduleId);
+                } else {
+                    window.GridState?.hide(moduleId);
+                }
+            });
+        });
+
+    document.getElementById("grid-reset-btn")?.addEventListener("click", async () => {
+        if (window.GridState) await window.GridState.reset();
+        if (settingsPanel) settingsPanel.style.display = "none";
+    });
 });

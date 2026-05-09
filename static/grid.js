@@ -42,11 +42,7 @@ function initGrid() {
                         }
                     },
                     end(e) {
-                        document.querySelectorAll(".grid-row").forEach(row => {
-                            const order = [...row.querySelectorAll(".module")]
-                                .map(m => m.dataset.id);
-                            localStorage.setItem("grid-order-" + row.id, JSON.stringify(order));
-                        });
+                        if (window.GridState) window.GridState.saveOrder();
                         if (window.CyberMap) window.CyberMap.resize();
                     }
                 }
@@ -70,7 +66,7 @@ function initGrid() {
                     },
                     end(e) {
                         e.target.removeAttribute("data-resizing");
-                        saveModuleSizes();
+                        if (window.GridState) window.GridState.saveSizes();
                         notifyModulesResized();
                     }
                 },
@@ -84,22 +80,11 @@ function initGrid() {
         document.querySelectorAll(".module").forEach(el => {
             if (el.getAttribute("data-resizing") === "true") {
                 el.removeAttribute("data-resizing");
-                saveModuleSizes();
+                if (window.GridState) window.GridState.saveSizes();
                 notifyModulesResized();
             }
         });
     });
-}
-
-function saveModuleSizes() {
-    const sizes = {};
-    document.querySelectorAll(".module[data-id]").forEach(el => {
-        const entry = {};
-        if (el.style.flexBasis) entry.width  = el.style.flexBasis;
-        if (el.style.height)    entry.height = el.style.height;
-        if (Object.keys(entry).length) sizes[el.dataset.id] = entry;
-    });
-    localStorage.setItem("grid-sizes", JSON.stringify(sizes));
 }
 
 function notifyModulesResized() {
@@ -112,19 +97,6 @@ function notifyModulesResized() {
     }
 }
 
-function resetGrid() {
-    localStorage.removeItem("grid-sizes");
-    localStorage.removeItem("grid-order-grid-top");
-    localStorage.removeItem("grid-order-grid-bottom");
-    document.querySelectorAll(".module").forEach(el => {
-        el.style.flexBasis  = "";
-        el.style.flexGrow   = "";
-        el.style.flexShrink = "";
-        el.style.height     = "";
-    });
-    console.log("Grid zurückgesetzt");
-}
-
 function initGridComplete() {
     interact.pointerMoveTolerance(1);
     initGrid();
@@ -132,5 +104,8 @@ function initGridComplete() {
 
 document.addEventListener("DOMContentLoaded", initGridComplete);
 
-window.CyberGrid = { init: () => {}, reset: resetGrid };
+window.CyberGrid = {
+    init:  () => {},
+    reset: () => { if (window.GridState) window.GridState.reset(); }
+};
 

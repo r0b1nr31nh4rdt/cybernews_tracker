@@ -6,6 +6,7 @@
         <div class="module module--half" data-id="map">
             <div class="module__header">
                 <span class="module__title" data-i18n="module.map">Karte</span>
+                <button class="module__close" data-module="map" title="Ausblenden">×</button>
             </div>
             <div class="module__body" style="padding:0; display:flex; flex-direction:column; overflow:hidden;">
                 <div id="map-container" style="flex:1; min-height:0;"></div>
@@ -15,6 +16,7 @@
         <div class="module module--quarter" data-id="stream">
             <div class="module__header">
                 <span class="module__title" id="stream-title" data-i18n="module.stream">Livestream</span>
+                <button class="module__close" data-module="stream" title="Ausblenden">×</button>
             </div>
             <div class="module__body stream-module">
                 <video id="stream-player" controls muted autoplay playsinline></video>
@@ -28,6 +30,7 @@
         <div class="module module--quarter" data-id="weather-stocks">
             <div class="module__header">
                 <span class="module__title" data-i18n="module.weather">Wetter & Kurse</span>
+                <button class="module__close" data-module="weather-stocks" title="Ausblenden">×</button>
             </div>
             <div class="module__body" style="padding:0; display:flex; flex-direction:column;">
 
@@ -81,6 +84,7 @@
             <div class="module__header">
                 <span class="module__title" data-i18n="module.headlines">Headlines</span>
                 <span id="headlines-count" class="module__badge"></span>
+                <button class="module__close" data-module="headlines" title="Ausblenden">×</button>
             </div>
             <div class="module__body" style="padding:0">
                 <div id="headlines-list"></div>
@@ -96,6 +100,7 @@
         <div class="module module--half" data-id="article">
             <div class="module__header">
                 <span class="module__title" id="article-module-title" data-i18n="module.article">Artikel</span>
+                <button class="module__close" data-module="article" title="Ausblenden">×</button>
             </div>
             <div class="module__body" id="article-viewer">
                 <div class="article-placeholder" data-i18n="news.placeholder">
@@ -117,6 +122,7 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="/static/grid_state.js"></script>
     <script src="/static/grid.js"></script>
     <script src="/static/map.js"></script>
     <script src="/static/stream.js"></script>

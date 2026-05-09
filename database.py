@@ -330,6 +330,26 @@ def get_watchlist(user_id):
     settings = profile.get("settings", {})
     return settings.get("watchlist", [])
 
+def get_grid_state(user_id):
+    profile = get_user_profile(user_id)
+    if not profile:
+        return None
+    return profile.get("settings", {}).get("grid", None)
+
+def save_grid_state(user_id, grid_state):
+    profile = get_user_profile(user_id)
+    if not profile:
+        create_user_profile(user_id, settings={"grid": grid_state})
+        return
+    settings = profile.get("settings", {})
+    settings["grid"] = grid_state
+    update_user_profile(
+        user_id,
+        language=profile.get("language"),
+        hobbies=profile.get("hobbies", []),
+        settings=settings
+    )
+
 def save_watchlist(user_id, watchlist):
     profile = get_user_profile(user_id)
     if not profile:
