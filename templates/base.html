@@ -13,24 +13,23 @@
             <span class="logo">CyberNews Tracker</span>
             <nav>
                 <div class="search-wrapper">
-                    <input type="text" id="nav-search" placeholder="Suche..." />
+                    <input type="text" id="nav-search"
+                    data-i18n-placeholder="nav.search.placeholder"
+                    placeholder="Suche..." />
                     <button id="search-clear" style="display:none">×</button>
                 </div>
                 <select id="nav-filter">
-                    <option value="all">Alle Themen</option>
-                    <option value="security">Security</option>
-                    <option value="geopolitics">Geopolitik</option>
-                    <option value="science">Wissenschaft</option>
-                    <option value="networks">Netzwerke</option>
-                    <option value="local">DE/EU</option>
+                    <option value="all"         data-i18n="nav.filter.all">Alle Themen</option>
+                    <option value="security"    data-i18n="nav.filter.security">Security</option>
+                    <option value="geopolitics" data-i18n="nav.filter.geopolitics">Geopolitik</option>
+                    <option value="science"     data-i18n="nav.filter.science">Wissenschaft</option>
+                    <option value="networks"    data-i18n="nav.filter.networks">Netzwerke</option>
+                    <option value="local"       data-i18n="nav.filter.local">DE/EU</option>
                 </select>
-                <select id="lang-toggle">
-                    <option value="de">🇩🇪 DE / €</option>
-                    <option value="us">🇺🇸 US / $</option>
-                </select>
-                <a href="/admin" id="admin-link" style="display:none">Admin</a>
-                <button id="login-btn">Login</button>
-                <a href="#" id="logout-link" style="display:none">Logout</a>
+                <button id="lang-toggle" title="Sprache wechseln">🇩🇪</button>
+                <a href="/admin" id="admin-link" data-i18n="nav.admin" style="display:none">Admin</a>
+                <button id="login-btn" data-i18n="nav.login">Login</button>
+                <a href="#" id="logout-link" data-i18n="nav.logout" style="display:none">Logout</a>
             </nav>
         </header>
 
@@ -40,35 +39,26 @@
         <script>
             document.querySelector("footer").textContent = `© ${new Date().getFullYear()} CyberNews Tracker`;
         </script>
-        <script>
-            const langToggle = document.getElementById("lang-toggle");
-            if (langToggle) {
-                langToggle.value = localStorage.getItem("lang") || "de";
-                langToggle.addEventListener("change", () => {
-                    localStorage.setItem("lang", langToggle.value);
-                });
-            }
-        </script>
         <!-- Login Modal -->
         <div id="login-modal" class="modal" style="display:none">
             <div class="modal__backdrop" id="login-backdrop"></div>
             <div class="modal__content modal__content--login">
                 <button class="modal__close" id="login-modal-close">×</button>
-                <h2 class="login-modal__title">Anmelden</h2>
-                <p class="login-modal__subtitle">
+                <h2 class="login-modal__title" data-i18n="login.title">Anmelden</h2>
+                <p class="login-modal__subtitle" data-i18n="login.subtitle">
                     Für persönliche Features wie Watchlist und Admin-Zugriff.
                 </p>
                 <form id="login-form">
                     <div class="login-field">
-                        <label for="username">Benutzername</label>
+                        <label for="username" data-i18n="login.username">Benutzername</label>
                         <input type="text" id="username" required autocomplete="username" />
                     </div>
                     <div class="login-field">
-                        <label for="password">Passwort</label>
+                        <label for="password" data-i18n="login.password">Passwort</label>
                         <input type="password" id="password" required autocomplete="current-password" />
                     </div>
                     <p id="login-error" class="login-error"></p>
-                    <button type="submit" class="login-submit">Einloggen</button>
+                    <button type="submit" class="login-submit" data-i18n="login.submit">Einloggen</button>
                 </form>
             </div>
         </div>
@@ -76,6 +66,8 @@
         <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+        <script src="/static/translations.js"></script>
+        <script src="/static/lang.js"></script>
         <script src="/static/login.js"></script>
         {% block scripts %}
         {% endblock %}

@@ -5,21 +5,21 @@
     <div id="grid-top" class="grid-row sortable-grid">
         <div class="module module--half" data-id="map">
             <div class="module__header">
-                <span class="module__title">Karte</span>
+                <span class="module__title" data-i18n="module.map">Karte</span>
             </div>
-            <div class="module__body" style="padding:0">
-                <div id="map-container" style="height:100%; min-height:260px;"></div>
+            <div class="module__body" style="padding:0; display:flex; flex-direction:column; overflow:hidden;">
+                <div id="map-container" style="flex:1; min-height:0;"></div>
             </div>
         </div>
 
         <div class="module module--quarter" data-id="stream">
             <div class="module__header">
-                <span class="module__title" id="stream-title">Livestream</span>
+                <span class="module__title" id="stream-title" data-i18n="module.stream">Livestream</span>
             </div>
             <div class="module__body stream-module">
                 <video id="stream-player" controls muted autoplay playsinline></video>
                 <div id="stream-buttons"></div>
-                <div id="stream-error" style="display:none">
+                <div id="stream-error" data-i18n="stream.error" style="display:none">
                     ⚠️ Stream nicht verfügbar
                 </div>
             </div>
@@ -27,7 +27,7 @@
 
         <div class="module module--quarter" data-id="weather-stocks">
             <div class="module__header">
-                <span class="module__title">Wetter & Kurse</span>
+                <span class="module__title" data-i18n="module.weather">Wetter & Kurse</span>
             </div>
             <div class="module__body" style="padding:0; display:flex; flex-direction:column;">
 
@@ -35,6 +35,7 @@
                 <div id="weather-widget">
                     <div id="weather-search">
                         <input type="text" id="weather-plz"
+                            data-i18n-placeholder="weather.placeholder"
                             placeholder="PLZ eingeben..."
                             maxlength="5"
                             pattern="[0-9]{5}" />
@@ -50,7 +51,7 @@
                         </div>
                     </div>
                     <div id="weather-forecast"></div>
-                    <div id="weather-error" style="display:none">⚠️ Ort nicht gefunden</div>
+                    <div id="weather-error" data-i18n="weather.error" style="display:none">⚠️ Ort nicht gefunden</div>
                 </div>
 
                 <!-- Kurstracker -->
@@ -59,13 +60,14 @@
                         <span class="stocks-label">Kurse</span>
                         <div id="stocks-add">
                             <input type="text" id="stocks-input"
+                                data-i18n-placeholder="stocks.placeholder"
                                 placeholder="Symbol (z.B. AAPL, BTC/USD)"
                                 maxlength="12" />
                             <button id="stocks-add-btn">+</button>
                         </div>
                     </div>
                     <div id="stocks-list"></div>
-                    <div id="stocks-empty" style="display:none">
+                    <div id="stocks-empty" data-i18n="stocks.empty" style="display:none">
                         Noch keine Symbole — oben hinzufügen
                     </div>
                 </div>
@@ -77,15 +79,15 @@
     <div id="grid-bottom" class="grid-row sortable-grid">
         <div class="module module--half" data-id="headlines">
             <div class="module__header">
-                <span class="module__title">Headlines</span>
+                <span class="module__title" data-i18n="module.headlines">Headlines</span>
                 <span id="headlines-count" class="module__badge"></span>
             </div>
             <div class="module__body" style="padding:0">
                 <div id="headlines-list"></div>
-                <div id="headlines-loading" class="loading-state">
+                <div id="headlines-loading" class="loading-state" data-i18n="news.loading">
                     Lade Nachrichten...
                 </div>
-                <div id="headlines-empty" class="empty-state" style="display:none">
+                <div id="headlines-empty" class="empty-state" data-i18n="news.empty" style="display:none">
                     Keine Artikel gefunden
                 </div>
             </div>
@@ -93,10 +95,10 @@
 
         <div class="module module--half" data-id="article">
             <div class="module__header">
-                <span class="module__title" id="article-module-title">Artikel</span>
+                <span class="module__title" id="article-module-title" data-i18n="module.article">Artikel</span>
             </div>
             <div class="module__body" id="article-viewer">
-                <div class="article-placeholder">
+                <div class="article-placeholder" data-i18n="news.placeholder">
                     ← Headline auswählen
                 </div>
             </div>

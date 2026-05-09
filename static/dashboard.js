@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
+    if (window.CyberLang) await window.CyberLang.init();
+
     const token = localStorage.getItem("token");
     let me = null;
 

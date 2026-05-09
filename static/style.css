@@ -257,6 +257,10 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
     background: var(--surface) !important;
 }
 
+.leaflet-interactive:focus {
+    outline: none;
+}
+
 /* ── Kurstracker ─────────────────────────────────── */
 #stocks-widget {
     padding: 10px;

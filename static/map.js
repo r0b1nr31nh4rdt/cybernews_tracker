@@ -1,12 +1,13 @@
 let mapInstance;
 let mapGeojsonLayer;
+let mapSelectedLayer = null;
 
 function initMap() {
     const container = document.getElementById("map-container");
     if (!container) return;
 
     mapInstance = L.map("map-container", {
-        center: [20, 10],
+        center: [51.1657, 10.4515],
         zoom: 2,
         minZoom: 2,
         maxZoom: 6,
@@ -19,6 +20,9 @@ function initMap() {
 
     container.style.background = "#4a4a4a";
 
+    const ro = new ResizeObserver(() => mapInstance.invalidateSize());
+    ro.observe(container);
+
     fetch("/api/geo/countries")
         .then(res => res.json())
         .then(data => {
@@ -26,7 +30,6 @@ function initMap() {
                 style: countryStyle,
                 onEachFeature: onEachCountry
             }).addTo(mapInstance);
-            mapInstance.fitBounds(mapGeojsonLayer.getBounds(), { padding: [10, 10] });
         })
         .catch(err => console.error("GeoJSON Ladefehler:", err));
 }
@@ -50,15 +53,26 @@ function highlightCountry(e) {
 }
 
 function resetCountry(e) {
+    if (e.target === mapSelectedLayer) return;
     mapGeojsonLayer.resetStyle(e.target);
 }
 
 function onCountryClick(e) {
-    const props = e.target.feature.properties;
-    const countryName = props.NAME || props.name || "Unbekannt";
-    const countryCode = props.ISO_A2 || props.iso_a2 || "";
+    if (mapSelectedLayer) {
+        mapGeojsonLayer.resetStyle(mapSelectedLayer);
+    }
 
-    console.log("Land angeklickt:", countryName, countryCode);
+    e.target.setStyle({
+        fillColor: "#c9d1d9",
+        fillOpacity: 0.4,
+        weight: 1.2,
+        color: "#c9d1d9"
+    });
+
+    mapSelectedLayer = e.target;
+
+    const props = e.target.feature.properties;
+    console.log("Land angeklickt:", props.NAME || props.name, props.ISO_A2 || props.iso_a2);
 }
 
 function onEachCountry(feature, layer) {

@@ -6,7 +6,7 @@ function initStocks() {
     if (!token) {
         const emptyEl = document.getElementById("stocks-empty");
         if (emptyEl) {
-            emptyEl.textContent = "🔒 Login für persönliche Watchlist";
+            emptyEl.textContent = window.i18n?.t("stocks.locked") || "🔒 Login für persönliche Watchlist";
             emptyEl.style.display = "block";
         }
         return;
@@ -75,7 +75,7 @@ async function addSymbol() {
     const symbol = input.value.trim().toUpperCase();
     if (!symbol || stocksWatchlist.includes(symbol)) return;
     if (stocksWatchlist.length >= 8) {
-        alert("Maximal 8 Symbole");
+        alert(window.i18n?.t("stocks.max") || "Maximal 8 Symbole");
         return;
     }
     stocksWatchlist.push(symbol);
@@ -137,7 +137,10 @@ function renderList() {
     `).join("");
 }
 
+let stocksLastQuotes = [];
+
 function renderQuotes(quotes) {
+    stocksLastQuotes = quotes;
     quotes.forEach(q => {
         const row = document.querySelector(`.stock-row[data-symbol="${q.symbol}"]`);
         if (!row) return;
@@ -148,9 +151,14 @@ function renderQuotes(quotes) {
             return;
         }
 
+        const apiCurrency = q.currency || "USD";
+        const displayCurrency = apiCurrency === "USD"
+            ? window.i18n?.t("stocks.currency") || "$"
+            : apiCurrency;
+
         const isPositive = q.change >= 0;
         row.querySelector(".stock-price").textContent =
-            `${parseFloat(q.price).toFixed(2)} ${q.currency}`;
+            `${parseFloat(q.price).toFixed(2)} ${displayCurrency}`;
 
         const changeEl = row.querySelector(".stock-change");
         changeEl.textContent = `${isPositive ? "+" : ""}${q.percent.toFixed(2)}%`;
@@ -159,8 +167,14 @@ function renderQuotes(quotes) {
     });
 }
 
+function rerenderCurrency() {
+    if (stocksLastQuotes.length > 0) {
+        renderQuotes(stocksLastQuotes);
+    }
+}
+
 window.CyberStocks = { init: initStocks, reload: () => {
     if (stocksRefreshInterval) clearInterval(stocksRefreshInterval);
     stocksWatchlist = [];
     initStocks();
-}};
+}, rerenderCurrency };
