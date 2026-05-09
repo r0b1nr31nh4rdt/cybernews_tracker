@@ -1,5 +1,5 @@
 import gc
-from database import init_db, create_user, add_news_source, get_news_sources
+from database import init_db, create_user, add_news_source, get_news_sources, add_stream, get_streams
 
 init_db()
 
@@ -55,6 +55,28 @@ for name, url, category in sources:
         continue
     try:
         add_news_source(name, url, category)
+        print(f"  ✓ {name}")
+    except Exception as e:
+        print(f"  ✗ {name}: {e}")
+
+# Streams — nur einfügen wenn noch nicht vorhanden
+existing_stream_urls = {s[2] for s in get_streams()}
+
+streams = [
+    ("Sky News",   "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/17501/sde-fast-skynews/master.m3u8"),
+    ("Euronews",   "https://dash4.antik.sk/live/test_euronews/playlist.m3u8"),
+    ("DW News",    "https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/master.m3u8"),
+    ("France 24",  "https://amg00106-france24-france24-samsunguk-qvpp8.amagi.tv/playlist/amg00106-france24-france24-samsunguk/playlist.m3u8"),
+    ("Al Arabiya", "https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8"),
+    ("Al Jazeera", "https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8"),
+]
+
+for name, url in streams:
+    if url in existing_stream_urls:
+        print(f"  ~ bereits vorhanden: {name}")
+        continue
+    try:
+        add_stream(name, url)
         print(f"  ✓ {name}")
     except Exception as e:
         print(f"  ✗ {name}: {e}")

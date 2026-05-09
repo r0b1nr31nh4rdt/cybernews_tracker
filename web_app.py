@@ -1,10 +1,15 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 import requests
 from flask_jwt_extended import (
     JWTManager, create_access_token,
     jwt_required, get_jwt_identity, get_jwt
 )
-from database import init_db, get_watchlist, save_watchlist
+from database import (
+    init_db, get_watchlist, save_watchlist,
+    admin_exists, create_user,
+    get_news_sources, add_news_source, toggle_news_source, delete_news_source,
+    get_streams, add_stream, delete_stream,
+)
 from news_collector import get_articles
 from auth import verify_user
 from dotenv import load_dotenv
@@ -26,11 +31,40 @@ def index():
 
 @app.route("/login")
 def login_page():
-    return render_template("loginform.html")
+    return redirect("/")
 
 @app.route("/admin")
 def admin_page():
     return render_template("admin.html")
+
+@app.route("/setup", methods=["GET", "POST"])
+def setup():
+    init_db()
+    if admin_exists():
+        return jsonify({
+            "error": "Setup bereits abgeschlossen. Dieser Endpoint ist gesperrt."
+        }), 403
+
+    if request.method == "GET":
+        return render_template("setup.html")
+
+    data     = request.json or {}
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+
+    if not username or not password:
+        return jsonify({"error": "Username und Passwort erforderlich"}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Passwort muss mindestens 8 Zeichen haben"}), 400
+
+    try:
+        create_user(username, password, role="admin")
+        return jsonify({
+            "success": True,
+            "message": f"Admin '{username}' wurde angelegt. /setup ist jetzt gesperrt."
+        })
+    except Exception:
+        return jsonify({"error": "Username bereits vergeben"}), 409
 
 # --- Auth API ---
 
@@ -112,6 +146,45 @@ def get_weather():
         "daily": weather_data.get("daily", {})
     })
 
+# --- Sprache API ---
+
+@app.route("/api/profile/language", methods=["GET"])
+@jwt_required()
+def get_language():
+    from database import get_user, get_user_profile
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"language": "de"})
+    profile = get_user_profile(db_user[0])
+    lang = profile.get("language") if profile else "de"
+    return jsonify({"language": lang or "de"})
+
+@app.route("/api/profile/language", methods=["POST"])
+@jwt_required()
+def save_language():
+    from database import get_user, get_user_profile, create_user_profile, update_user_profile
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    lang = request.json.get("language", "de")
+    if lang not in ("de", "en"):
+        return jsonify({"error": "Ungültige Sprache"}), 400
+
+    profile = get_user_profile(db_user[0])
+    if not profile:
+        create_user_profile(db_user[0], language=lang)
+    else:
+        update_user_profile(
+            db_user[0],
+            language=lang,
+            hobbies=profile.get("hobbies", []),
+            settings=profile.get("settings", {})
+        )
+    return jsonify({"language": lang})
+
 # --- Watchlist API ---
 
 @app.route("/api/watchlist", methods=["GET"])
@@ -174,7 +247,7 @@ def get_quotes():
 # --- Platzhalter ---
 
 @app.route("/api/news", methods=["GET"])
-@jwt_required()
+@jwt_required(optional=True)
 def api_news():
     category = request.args.get("category", "all")
     limit    = min(int(request.args.get("limit", 50)), 100)
@@ -182,8 +255,119 @@ def api_news():
     return jsonify({"articles": articles, "count": len(articles)})
 
 @app.route("/api/streams", methods=["GET"])
+@jwt_required(optional=True)
 def api_streams():
-    return jsonify({"msg": "TODO (Briefing 06)"}), 501
+    streams = get_streams()
+    return jsonify({"streams": [
+        {"id": s[0], "name": s[1], "url": s[2]}
+        for s in streams
+    ]})
+
+# --- Admin Helpers ---
+
+def require_admin():
+    claims = get_jwt()
+    if claims.get("role") != "admin":
+        return jsonify({"error": "Admin-Zugriff erforderlich"}), 403
+    return None
+
+# --- Admin Sources API ---
+
+@app.route("/api/admin/sources", methods=["GET"])
+@jwt_required()
+def admin_get_sources():
+    err = require_admin()
+    if err: return err
+    sources = get_news_sources(only_active=False)
+    return jsonify({"sources": [
+        {"id": s[0], "name": s[1], "rss_url": s[2],
+         "category": s[3], "active": bool(s[4])}
+        for s in sources
+    ]})
+
+@app.route("/api/admin/sources", methods=["POST"])
+@jwt_required()
+def admin_add_source():
+    err = require_admin()
+    if err: return err
+    data     = request.json
+    name     = data.get("name", "").strip()
+    rss_url  = data.get("rss_url", "").strip()
+    category = data.get("category", "security")
+    if not name or not rss_url:
+        return jsonify({"error": "Name und URL erforderlich"}), 400
+    add_news_source(name, rss_url, category)
+    return jsonify({"success": True})
+
+@app.route("/api/admin/sources/<int:source_id>", methods=["PATCH"])
+@jwt_required()
+def admin_toggle_source(source_id):
+    err = require_admin()
+    if err: return err
+    active = request.json.get("active", True)
+    toggle_news_source(source_id, active)
+    return jsonify({"success": True})
+
+@app.route("/api/admin/sources/<int:source_id>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_source(source_id):
+    err = require_admin()
+    if err: return err
+    delete_news_source(source_id)
+    return jsonify({"success": True})
+
+# --- Admin Streams API ---
+
+@app.route("/api/admin/streams", methods=["GET"])
+@jwt_required()
+def admin_get_streams():
+    err = require_admin()
+    if err: return err
+    streams = get_streams()
+    return jsonify({"streams": [
+        {"id": s[0], "name": s[1], "youtube_url": s[2]}
+        for s in streams
+    ]})
+
+@app.route("/api/admin/streams", methods=["POST"])
+@jwt_required()
+def admin_add_stream():
+    err = require_admin()
+    if err: return err
+    data = request.json
+    name = data.get("name", "").strip()
+    url  = data.get("youtube_url", "").strip()
+    if not name or not url:
+        return jsonify({"error": "Name und URL erforderlich"}), 400
+    add_stream(name, url)
+    return jsonify({"success": True})
+
+@app.route("/api/admin/streams/<int:stream_id>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_stream(stream_id):
+    err = require_admin()
+    if err: return err
+    delete_stream(stream_id)
+    return jsonify({"success": True})
+
+# --- Register ---
+
+@app.route("/api/register", methods=["POST"])
+def register():
+    data     = request.json
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+
+    if not username or not password:
+        return jsonify({"error": "Username und Passwort erforderlich"}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Passwort muss mindestens 8 Zeichen haben"}), 400
+
+    try:
+        create_user(username, password, role="analyst")
+        return jsonify({"success": True})
+    except Exception:
+        return jsonify({"error": "Username bereits vergeben"}), 409
 
 if __name__ == "__main__":
     init_db()

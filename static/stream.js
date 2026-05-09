@@ -1,39 +1,44 @@
-const STREAM_SOURCES = [
-    { name: "Sky News",   url: "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/17501/sde-fast-skynews/master.m3u8" },
-    { name: "Euronews",   url: "https://dash4.antik.sk/live/test_euronews/playlist.m3u8" },
-    { name: "DW News",    url: "https://dwamdstream103.akamaized.net/hls/live/2015526/dwstream103/master.m3u8" },
-    { name: "France 24",  url: "https://amg00106-france24-france24-samsunguk-qvpp8.amagi.tv/playlist/amg00106-france24-france24-samsunguk/playlist.m3u8" },
-    { name: "Al Arabiya", url: "https://live.alarabiya.net/alarabiapublish/alarabiya.smil/playlist.m3u8" },
-    { name: "Al Jazeera", url: "https://live-hls-apps-aje-fa.getaj.net/AJE/index.m3u8" },
-];
-
 let streamHls = null;
-let streamActiveIndex = parseInt(localStorage.getItem("stream-index") || "0");
 
-function initStream() {
+async function initStream() {
     const container = document.getElementById("stream-buttons");
     if (!container) return;
 
-    STREAM_SOURCES.forEach((stream, i) => {
+    let streams = [];
+    try {
+        const res = await fetch("/api/streams");
+        const data = await res.json();
+        streams = data.streams || [];
+    } catch (err) {
+        console.error("Streams laden Fehler:", err);
+    }
+
+    if (streams.length === 0) {
+        const errorEl = document.getElementById("stream-error");
+        if (errorEl) errorEl.style.display = "flex";
+        return;
+    }
+
+    streams.forEach((stream, i) => {
         const btn = document.createElement("button");
         btn.textContent = stream.name;
         btn.className = "stream-btn";
         btn.dataset.index = i;
-        btn.addEventListener("click", () => loadStream(i));
+        btn.addEventListener("click", () => loadStream(i, streams));
         container.appendChild(btn);
     });
 
-    loadStream(streamActiveIndex);
+    const savedIndex = parseInt(localStorage.getItem("stream-index") || "0");
+    loadStream(Math.min(savedIndex, streams.length - 1), streams);
 }
 
-function loadStream(index) {
-    const stream = STREAM_SOURCES[index];
+function loadStream(index, streams) {
+    const stream = streams[index];
     if (!stream) return;
 
-    streamActiveIndex = index;
     localStorage.setItem("stream-index", index);
 
-    const video = document.getElementById("stream-player");
+    const video   = document.getElementById("stream-player");
     const errorEl = document.getElementById("stream-error");
     const titleEl = document.getElementById("stream-title");
 
@@ -43,7 +48,7 @@ function loadStream(index) {
 
     if (titleEl) titleEl.textContent = stream.name;
     if (errorEl) errorEl.style.display = "none";
-    if (video) video.style.display = "block";
+    if (video)   video.style.display = "block";
 
     if (streamHls) {
         streamHls.destroy();
@@ -62,7 +67,7 @@ function loadStream(index) {
             if (data.fatal) {
                 console.warn("Stream Fehler:", stream.name, data);
                 if (errorEl) errorEl.style.display = "flex";
-                if (video) video.style.display = "none";
+                if (video)   video.style.display = "none";
             }
         });
 

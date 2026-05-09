@@ -794,6 +794,30 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 
 .login-submit:hover { opacity: 0.85; }
 
+/* ── Auth Tabs im Login Modal ────────────────────── */
+.auth-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.auth-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px 12px;
+    margin-bottom: -1px;
+}
+
+.auth-tab--active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
 #login-btn {
     background: var(--surface-2);
     border: 1px solid var(--border);
@@ -805,6 +829,172 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 }
 
 #login-btn:hover { border-color: var(--accent); }
+
+/* ── Admin Panel ─────────────────────────────────── */
+#admin-panel {
+    padding: 24px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.admin-header h1 { font-size: 22px; font-weight: 700; }
+
+.admin-dashboard-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 8px 16px;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.admin-dashboard-btn:hover { border-color: var(--accent); }
+
+.admin-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+
+.admin-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px 16px;
+    margin-bottom: -1px;
+}
+
+.admin-tab:hover { color: var(--text); }
+.admin-tab--active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.admin-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.admin-toolbar h2 { font-size: 16px; }
+
+.admin-add-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.admin-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-form input,
+.admin-form select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 6px 10px;
+    font-size: 13px;
+    flex: 1;
+    min-width: 150px;
+}
+
+.admin-form button {
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+
+.admin-form button:first-of-type {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    font-weight: 600;
+}
+
+.admin-list { display: flex; flex-direction: column; gap: 6px; }
+
+.admin-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.admin-row__badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: #000;
+    flex-shrink: 0;
+}
+
+.admin-row__name { font-weight: 600; flex-shrink: 0; }
+
+.admin-row__url {
+    color: var(--text-muted);
+    font-size: 11px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.admin-delete-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--accent-red);
+    font-size: 12px;
+    padding: 4px 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.admin-delete-btn:hover { background: var(--accent-red); color: #fff; }
 
 /* ── Footer ──────────────────────────────────────── */
 footer {

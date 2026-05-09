@@ -1,11 +1,68 @@
-<!-- admin.html -->
 {% extends "base.html" %}
 
+{% block title %}Admin — CyberNews Tracker{% endblock %}
+
 {% block content %}
-    <h1>Admin</h1>
-    <main>
-        Admin stuff will appear here soon
-    </main>
+<main id="admin-panel">
+    <div class="admin-header">
+        <h1>Admin Panel</h1>
+        <a href="/" class="admin-dashboard-btn">← Dashboard</a>
+    </div>
+
+    <div class="admin-tabs">
+        <button class="admin-tab admin-tab--active" data-tab="sources">Quellen</button>
+        <button class="admin-tab" data-tab="streams">Streams</button>
+        <button class="admin-tab" data-tab="users">User</button>
+    </div>
+
+    <!-- Quellen Tab -->
+    <div class="admin-content" id="tab-sources">
+        <div class="admin-toolbar">
+            <h2>News-Quellen</h2>
+            <button class="admin-add-btn" id="add-source-btn">+ Quelle hinzufügen</button>
+        </div>
+
+        <div id="add-source-form" class="admin-form" style="display:none">
+            <input type="text" id="source-name" placeholder="Name (z.B. SecurityWeek)" />
+            <input type="text" id="source-url" placeholder="RSS URL" />
+            <select id="source-category">
+                <option value="security">Security</option>
+                <option value="geopolitics">Geopolitik</option>
+                <option value="science">Wissenschaft</option>
+                <option value="networks">Netzwerke</option>
+                <option value="local">DE/EU</option>
+            </select>
+            <button id="source-save-btn">Speichern</button>
+            <button id="source-cancel-btn">Abbrechen</button>
+        </div>
+
+        <div id="sources-list" class="admin-list"></div>
+    </div>
+
+    <!-- Streams Tab -->
+    <div class="admin-content" id="tab-streams" style="display:none">
+        <div class="admin-toolbar">
+            <h2>Streams</h2>
+            <button class="admin-add-btn" id="add-stream-btn">+ Stream hinzufügen</button>
+        </div>
+
+        <div id="add-stream-form" class="admin-form" style="display:none">
+            <input type="text" id="stream-name" placeholder="Name (z.B. DW News)" />
+            <input type="text" id="stream-url" placeholder="HLS Stream URL (.m3u8)" />
+            <button id="stream-save-btn">Speichern</button>
+            <button id="stream-cancel-btn">Abbrechen</button>
+        </div>
+
+        <div id="streams-list" class="admin-list"></div>
+    </div>
+
+    <!-- User Tab (Platzhalter für Briefing 14b) -->
+    <div class="admin-content" id="tab-users" style="display:none">
+        <p style="color:var(--text-muted); padding:20px">
+            User-Verwaltung folgt in Briefing 14b.
+        </p>
+    </div>
+</main>
 {% endblock %}
 
 {% block scripts %}

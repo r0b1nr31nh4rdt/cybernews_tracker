@@ -44,22 +44,52 @@
             <div class="modal__backdrop" id="login-backdrop"></div>
             <div class="modal__content modal__content--login">
                 <button class="modal__close" id="login-modal-close">×</button>
-                <h2 class="login-modal__title" data-i18n="login.title">Anmelden</h2>
-                <p class="login-modal__subtitle" data-i18n="login.subtitle">
-                    Für persönliche Features wie Watchlist und Admin-Zugriff.
-                </p>
-                <form id="login-form">
-                    <div class="login-field">
-                        <label for="username" data-i18n="login.username">Benutzername</label>
-                        <input type="text" id="username" required autocomplete="username" />
-                    </div>
-                    <div class="login-field">
-                        <label for="password" data-i18n="login.password">Passwort</label>
-                        <input type="password" id="password" required autocomplete="current-password" />
-                    </div>
-                    <p id="login-error" class="login-error"></p>
-                    <button type="submit" class="login-submit" data-i18n="login.submit">Einloggen</button>
-                </form>
+
+                <div class="auth-tabs">
+                    <button class="auth-tab auth-tab--active" id="tab-login-btn">Anmelden</button>
+                    <button class="auth-tab" id="tab-register-btn">Registrieren</button>
+                </div>
+
+                <div id="login-form-wrapper">
+                    <p class="login-modal__subtitle" data-i18n="login.subtitle">
+                        Für persönliche Features wie Watchlist und Admin-Zugriff.
+                    </p>
+                    <form id="login-form">
+                        <div class="login-field">
+                            <label for="username" data-i18n="login.username">Benutzername</label>
+                            <input type="text" id="username" required autocomplete="username" />
+                        </div>
+                        <div class="login-field">
+                            <label for="password" data-i18n="login.password">Passwort</label>
+                            <input type="password" id="password" required autocomplete="current-password" />
+                        </div>
+                        <p id="login-error" class="login-error"></p>
+                        <button type="submit" class="login-submit" data-i18n="login.submit">Einloggen</button>
+                    </form>
+                </div>
+
+                <div id="register-form-wrapper" style="display:none">
+                    <p class="login-modal__subtitle">
+                        Neuer Account — erhält automatisch Analyst-Zugriff.
+                    </p>
+                    <form id="register-form">
+                        <div class="login-field">
+                            <label>Benutzername</label>
+                            <input type="text" id="reg-username" required />
+                        </div>
+                        <div class="login-field">
+                            <label>Passwort (min. 8 Zeichen)</label>
+                            <input type="password" id="reg-password" required />
+                        </div>
+                        <div class="login-field">
+                            <label>Passwort wiederholen</label>
+                            <input type="password" id="reg-password2" required />
+                        </div>
+                        <p id="register-error" class="login-error"></p>
+                        <p id="register-success" style="color:var(--accent-green);font-size:13px;min-height:18px"></p>
+                        <button type="submit" class="login-submit">Registrieren</button>
+                    </form>
+                </div>
             </div>
         </div>
 
