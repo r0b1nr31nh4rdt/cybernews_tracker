@@ -5,6 +5,7 @@ from flask_jwt_extended import (
     jwt_required, get_jwt_identity, get_jwt
 )
 from database import init_db, get_watchlist, save_watchlist
+from news_collector import get_articles
 from auth import verify_user
 from dotenv import load_dotenv
 import os
@@ -173,8 +174,12 @@ def get_quotes():
 # --- Platzhalter ---
 
 @app.route("/api/news", methods=["GET"])
+@jwt_required()
 def api_news():
-    return jsonify({"msg": "TODO (Briefing 04)"}), 501
+    category = request.args.get("category", "all")
+    limit    = min(int(request.args.get("limit", 50)), 100)
+    articles = get_articles(category=category, limit=limit)
+    return jsonify({"articles": articles, "count": len(articles)})
 
 @app.route("/api/streams", methods=["GET"])
 def api_streams():
@@ -182,4 +187,4 @@ def api_streams():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, port=int(FLASK_PORT or 5001))
+    app.run(debug=True, host="0.0.0.0", port=int(os.getenv("FLASK_PORT", 5001)))
