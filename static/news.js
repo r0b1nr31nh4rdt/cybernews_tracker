@@ -1,9 +1,34 @@
-let newsAllArticles = [];
-let newsActiveIndex = null;
+let newsAllArticles     = [];
+let newsFilteredArticles = [];
+let newsActiveIndex     = null;
+let newsSearchDebounce  = null;
 
 function initNews() {
     loadNews();
     setInterval(loadNews, 5 * 60 * 1000);
+
+    const searchInput = document.getElementById("nav-search");
+    if (searchInput) {
+        searchInput.addEventListener("input", () => {
+            clearTimeout(newsSearchDebounce);
+            newsSearchDebounce = setTimeout(applyFilters, 300);
+        });
+    }
+
+    const filter = document.getElementById("nav-filter");
+    if (filter) {
+        filter.addEventListener("change", applyFilters);
+    }
+
+    document.getElementById("search-clear")?.addEventListener("click", () => {
+        const input = document.getElementById("nav-search");
+        if (input) {
+            input.value = "";
+            input.classList.remove("has-results", "no-results");
+        }
+        document.getElementById("search-clear").style.display = "none";
+        applyFilters();
+    });
 
     document.getElementById("modal-close")
         ?.addEventListener("click", closeModal);
@@ -19,15 +44,14 @@ async function loadNews() {
     if (!token) return;
 
     const loadingEl = document.getElementById("headlines-loading");
-    const emptyEl   = document.getElementById("headlines-empty");
 
     if (loadingEl) loadingEl.style.display = "flex";
 
     try {
         const category = document.getElementById("nav-filter")?.value || "all";
 
-        const res = await fetch(`/api/news?category=${category}&limit=50`, {
-            headers: { Authorization: "Bearer " + token }
+        const res = await fetch(`/api/news?category=${category}&limit=100`, {
+            headers: { Authorization: "Bearer " + localStorage.getItem("token") }
         });
         if (res.status === 401) {
             localStorage.removeItem("token");
@@ -41,15 +65,7 @@ async function loadNews() {
 
         if (loadingEl) loadingEl.style.display = "none";
 
-        if (newsAllArticles.length === 0) {
-            if (emptyEl) emptyEl.style.display = "flex";
-            return;
-        }
-
-        if (emptyEl) emptyEl.style.display = "none";
-        renderHeadlines(newsAllArticles);
-
-        if (newsActiveIndex === null) showArticle(0);
+        applyFilters();
 
     } catch (err) {
         console.error("News-Fehler:", err);
@@ -57,12 +73,63 @@ async function loadNews() {
     }
 }
 
+function applyFilters() {
+    const searchTerm = document.getElementById("nav-search")?.value
+        .trim().toLowerCase() || "";
+    const category = document.getElementById("nav-filter")?.value || "all";
+
+    newsFilteredArticles = newsAllArticles.filter(article => {
+        const categoryMatch = category === "all" || article.category === category;
+        const searchMatch = !searchTerm ||
+            article.title.toLowerCase().includes(searchTerm) ||
+            (article.summary || "").toLowerCase().includes(searchTerm);
+        return categoryMatch && searchMatch;
+    });
+
+    // Suchfeld einfärben
+    const searchInput = document.getElementById("nav-search");
+    if (searchInput && searchTerm) {
+        searchInput.classList.toggle("has-results", newsFilteredArticles.length > 0);
+        searchInput.classList.toggle("no-results", newsFilteredArticles.length === 0);
+    } else if (searchInput) {
+        searchInput.classList.remove("has-results", "no-results");
+    }
+
+    // Clear-Button ein-/ausblenden
+    const clearBtn = document.getElementById("search-clear");
+    if (clearBtn) clearBtn.style.display = searchTerm ? "block" : "none";
+
+    // Artikel-Count aktualisieren
+    const countEl = document.getElementById("headlines-count");
+    if (countEl) {
+        countEl.textContent = searchTerm || category !== "all"
+            ? `${newsFilteredArticles.length} / ${newsAllArticles.length}`
+            : newsAllArticles.length;
+    }
+
+    const emptyEl = document.getElementById("headlines-empty");
+
+    if (newsFilteredArticles.length === 0) {
+        if (emptyEl) {
+            emptyEl.textContent = searchTerm
+                ? `Keine Treffer für "${searchTerm}"`
+                : "Keine Artikel gefunden";
+            emptyEl.style.display = "flex";
+        }
+        document.getElementById("headlines-list").innerHTML = "";
+        return;
+    }
+
+    if (emptyEl) emptyEl.style.display = "none";
+
+    newsActiveIndex = null;
+    renderHeadlines(newsFilteredArticles);
+    showArticle(0);
+}
+
 function renderHeadlines(articles) {
     const list = document.getElementById("headlines-list");
-    const countEl = document.getElementById("headlines-count");
     if (!list) return;
-
-    if (countEl) countEl.textContent = articles.length;
 
     list.innerHTML = articles.map((article, i) => {
         const time = article.published
@@ -89,7 +156,7 @@ function renderHeadlines(articles) {
 }
 
 function showArticle(index) {
-    const article = newsAllArticles[index];
+    const article = newsFilteredArticles[index];
     if (!article) return;
 
     newsActiveIndex = index;
@@ -135,7 +202,7 @@ function showArticle(index) {
 }
 
 function openModal(index) {
-    const article = newsAllArticles[index];
+    const article = newsFilteredArticles[index];
     if (!article) return;
 
     const modal = document.getElementById("article-modal");
@@ -202,16 +269,6 @@ function escapeHtml(str) {
 function stripHtml(str) {
     return str.replace(/<[^>]*>/g, "").trim();
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-    const filter = document.getElementById("nav-filter");
-    if (filter) {
-        filter.addEventListener("change", () => {
-            newsActiveIndex = null;
-            loadNews();
-        });
-    }
-});
 
 window.CyberNews = { init: initNews, reload: loadNews };
 window.showArticle = showArticle;

@@ -12,7 +12,10 @@
         <header>
             <span class="logo">CyberNews Tracker</span>
             <nav>
-                <input type="text" id="nav-search" placeholder="Suche..." />
+                <div class="search-wrapper">
+                    <input type="text" id="nav-search" placeholder="Suche..." />
+                    <button id="search-clear" style="display:none">×</button>
+                </div>
                 <select id="nav-filter">
                     <option value="all">Alle Themen</option>
                     <option value="security">Security</option>
