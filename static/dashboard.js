@@ -1,7 +1,7 @@
-const token = localStorage.getItem("token");
-if (!token) window.location.href = "/login";
+if (!localStorage.getItem("token")) window.location.href = "/login";
 
 async function apiFetch(path) {
+    const token = localStorage.getItem("token");
     const response = await fetch(path, {
         headers: { Authorization: "Bearer " + token }
     });
@@ -16,9 +16,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const me = await apiFetch("/api/me");
     console.log("Eingeloggt als:", me.username, "| Rolle:", me.role);
 
-    if (window.CyberGrid) window.CyberGrid.init();
-    if (window.CyberMap) window.CyberMap.init();
-    if (window.CyberStream) window.CyberStream.init();
-    if (window.CyberWeather) window.CyberWeather.init();
-    if (window.CyberStocks) window.CyberStocks.init();
+    for (const [name, mod] of [
+        ["CyberGrid",    window.CyberGrid],
+        ["CyberMap",     window.CyberMap],
+        ["CyberStream",  window.CyberStream],
+        ["CyberWeather", window.CyberWeather],
+        ["CyberStocks",  window.CyberStocks],
+        ["CyberNews",    window.CyberNews],
+    ]) {
+        try {
+            if (mod) mod.init();
+        } catch (e) {
+            console.error(name + " init fehlgeschlagen:", e);
+        }
+    }
 });

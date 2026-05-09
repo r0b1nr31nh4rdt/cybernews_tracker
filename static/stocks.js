@@ -1,5 +1,5 @@
-let watchlist = [];
-let refreshInterval = null;
+let stocksWatchlist = [];
+let stocksRefreshInterval = null;
 
 function initStocks() {
     const addBtn = document.getElementById("stocks-add-btn");
@@ -12,20 +12,27 @@ function initStocks() {
     });
 
     loadWatchlist();
-    refreshInterval = setInterval(refreshQuotes, 60000);
+    stocksRefreshInterval = setInterval(refreshQuotes, 60000);
 }
 
 async function loadWatchlist() {
     const token = localStorage.getItem("token");
+    if (!token) return;
     try {
         const res = await fetch("/api/watchlist", {
             headers: { Authorization: "Bearer " + token }
         });
+        if (res.status === 401) {
+            clearInterval(stocksRefreshInterval);
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+            return;
+        }
         if (!res.ok) return;
         const data = await res.json();
-        watchlist = data.watchlist || [];
+        stocksWatchlist = data.watchlist || [];
         renderList();
-        if (watchlist.length > 0) refreshQuotes();
+        if (stocksWatchlist.length > 0) refreshQuotes();
     } catch (err) {
         console.error("Watchlist Ladefehler:", err);
     }
@@ -33,15 +40,21 @@ async function loadWatchlist() {
 
 async function saveWatchlist() {
     const token = localStorage.getItem("token");
+    if (!token) return;
     try {
-        await fetch("/api/watchlist", {
+        const res = await fetch("/api/watchlist", {
             method: "POST",
             headers: {
                 Authorization: "Bearer " + token,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ watchlist })
+            body: JSON.stringify({ watchlist: stocksWatchlist })
         });
+        if (res.status === 401) {
+            clearInterval(stocksRefreshInterval);
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        }
     } catch (err) {
         console.error("Watchlist Speicherfehler:", err);
     }
@@ -50,12 +63,12 @@ async function saveWatchlist() {
 async function addSymbol() {
     const input = document.getElementById("stocks-input");
     const symbol = input.value.trim().toUpperCase();
-    if (!symbol || watchlist.includes(symbol)) return;
-    if (watchlist.length >= 8) {
+    if (!symbol || stocksWatchlist.includes(symbol)) return;
+    if (stocksWatchlist.length >= 8) {
         alert("Maximal 8 Symbole");
         return;
     }
-    watchlist.push(symbol);
+    stocksWatchlist.push(symbol);
     input.value = "";
     renderList();
     await saveWatchlist();
@@ -63,19 +76,26 @@ async function addSymbol() {
 }
 
 async function removeSymbol(symbol) {
-    watchlist = watchlist.filter(s => s !== symbol);
+    stocksWatchlist = stocksWatchlist.filter(s => s !== symbol);
     renderList();
     await saveWatchlist();
 }
 
 async function refreshQuotes() {
-    if (watchlist.length === 0) return;
+    if (stocksWatchlist.length === 0) return;
     const token = localStorage.getItem("token");
+    if (!token) return;
     try {
         const res = await fetch(
-            `/api/quotes?symbols=${watchlist.join(",")}`,
+            `/api/quotes?symbols=${stocksWatchlist.join(",")}`,
             { headers: { Authorization: "Bearer " + token } }
         );
+        if (res.status === 401) {
+            clearInterval(stocksRefreshInterval);
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+            return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         renderQuotes(data.quotes);
@@ -89,7 +109,7 @@ function renderList() {
     const emptyEl = document.getElementById("stocks-empty");
     if (!listEl) return;
 
-    if (watchlist.length === 0) {
+    if (stocksWatchlist.length === 0) {
         listEl.innerHTML = "";
         if (emptyEl) emptyEl.style.display = "block";
         return;
@@ -97,7 +117,7 @@ function renderList() {
 
     if (emptyEl) emptyEl.style.display = "none";
 
-    listEl.innerHTML = watchlist.map(symbol => `
+    listEl.innerHTML = stocksWatchlist.map(symbol => `
         <div class="stock-row" data-symbol="${symbol}">
             <span class="stock-symbol">${symbol}</span>
             <span class="stock-price">—</span>

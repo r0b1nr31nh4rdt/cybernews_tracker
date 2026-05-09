@@ -8,11 +8,11 @@ const WEATHER_ICONS = {
     95:"⛈️", 96:"⛈️", 99:"⛈️"
 };
 
-const WIND_DIRECTIONS = ["N","NO","O","SO","S","SW","W","NW"];
-const DAYS = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+const WEATHER_WIND_DIRECTIONS = ["N","NO","O","SO","S","SW","W","NW"];
+const WEATHER_DAYS = ["So","Mo","Di","Mi","Do","Fr","Sa"];
 
 function windDirection(deg) {
-    return WIND_DIRECTIONS[Math.round(deg / 45) % 8];
+    return WEATHER_WIND_DIRECTIONS[Math.round(deg / 45) % 8];
 }
 
 function weatherIcon(code) {
@@ -81,7 +81,7 @@ function renderWeather(data) {
     const daily = data.daily;
     for (let i = 0; i < 3; i++) {
         const date = new Date(daily.time[i]);
-        const day = DAYS[date.getDay()];
+        const day = WEATHER_DAYS[date.getDay()];
         const icon = weatherIcon(daily.weather_code[i]);
         const max = Math.round(daily.temperature_2m_max[i]);
         const min = Math.round(daily.temperature_2m_min[i]);
