@@ -10,27 +10,31 @@
     </head>
     <body>
         <header>
-            <span class="logo">CyberNews Tracker</span>
+            <a href="/" class="logo">CyberNews Tracker</a>
             <nav>
-                <div class="search-wrapper">
-                    <input type="text" id="nav-search"
-                    data-i18n-placeholder="nav.search.placeholder"
-                    placeholder="Suche..." />
-                    <button id="search-clear" style="display:none">×</button>
+                <div class="nav-center">
+                    <div class="search-wrapper">
+                        <input type="text" id="nav-search"
+                        data-i18n-placeholder="nav.search.placeholder"
+                        placeholder="Suche..." />
+                        <button id="search-clear" style="display:none">×</button>
+                    </div>
+                    <select id="nav-filter">
+                        <option value="all"         data-i18n="nav.filter.all">Alle Themen</option>
+                        <option value="security"    data-i18n="nav.filter.security">Security</option>
+                        <option value="geopolitics" data-i18n="nav.filter.geopolitics">Geopolitik</option>
+                        <option value="science"     data-i18n="nav.filter.science">Wissenschaft</option>
+                        <option value="networks"    data-i18n="nav.filter.networks">Netzwerke</option>
+                        <option value="local"       data-i18n="nav.filter.local">DE/EU</option>
+                    </select>
                 </div>
-                <select id="nav-filter">
-                    <option value="all"         data-i18n="nav.filter.all">Alle Themen</option>
-                    <option value="security"    data-i18n="nav.filter.security">Security</option>
-                    <option value="geopolitics" data-i18n="nav.filter.geopolitics">Geopolitik</option>
-                    <option value="science"     data-i18n="nav.filter.science">Wissenschaft</option>
-                    <option value="networks"    data-i18n="nav.filter.networks">Netzwerke</option>
-                    <option value="local"       data-i18n="nav.filter.local">DE/EU</option>
-                </select>
-                <button id="lang-toggle" title="Sprache wechseln">🇩🇪</button>
-                <button id="settings-btn" title="Einstellungen">⚙️</button>
-                <a href="/admin" id="admin-link" data-i18n="nav.admin" style="display:none">Admin</a>
-                <button id="login-btn" data-i18n="nav.login">Login</button>
-                <a href="#" id="logout-link" data-i18n="nav.logout" style="display:none">Logout</a>
+                <div class="nav-right">
+                    <button id="lang-toggle" title="Sprache wechseln">🇩🇪</button>
+                    <button id="settings-btn" title="Einstellungen">⚙️</button>
+                    <a href="/admin" id="admin-link" data-i18n="nav.admin" style="display:none">Admin</a>
+                    <button id="login-btn" data-i18n="nav.login">Login</button>
+                    <a href="#" id="logout-link" data-i18n="nav.logout" style="display:none">Logout</a>
+                </div>
             </nav>
         </header>
 

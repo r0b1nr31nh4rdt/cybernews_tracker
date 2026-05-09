@@ -39,18 +39,58 @@ header {
     z-index: 100;
 }
 
-.logo {
-    font-weight: 600;
+a.logo {
+    text-decoration: none;
     color: var(--accent);
+    font-weight: 600;
     white-space: nowrap;
 }
 
+a.logo:hover { opacity: 0.8; }
+
 nav {
+    flex: 1;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
-    flex: 1;
 }
+
+.nav-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+nav input,
+nav select,
+nav button,
+nav a {
+    height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
+    vertical-align: middle;
+    border-radius: var(--radius);
+}
+
+nav button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+nav button:hover { border-color: var(--accent); }
 
 .search-wrapper {
     position: relative;
@@ -79,10 +119,7 @@ nav {
 #nav-search {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     color: var(--text);
-    padding: 6px 10px;
-    font-size: 13px;
     width: 200px;
 }
 
@@ -94,20 +131,7 @@ nav {
 #nav-filter {
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     color: var(--text);
-    padding: 6px 10px;
-    font-size: 13px;
-}
-
-#lang-toggle {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    padding: 6px 10px;
-    font-size: 13px;
-    cursor: pointer;
 }
 
 #lang-toggle:focus { outline: none; border-color: var(--accent); }
@@ -115,9 +139,7 @@ nav {
 nav a {
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 13px;
-    padding: 6px 10px;
-    border-radius: var(--radius);
+    line-height: 32px;
 }
 
 nav a:hover { background: var(--surface-2); color: var(--text); }
@@ -1058,16 +1080,7 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 .module__close:hover { color: var(--accent-red); }
 
 /* ── Settings Button ─────────────────────────────── */
-#settings-btn {
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    cursor: pointer;
-    font-size: 15px;
-    padding: 6px 10px;
-}
-
+#settings-btn { font-size: 15px; }
 #settings-btn:hover { border-color: var(--accent); }
 
 /* ── Settings Panel ──────────────────────────────── */

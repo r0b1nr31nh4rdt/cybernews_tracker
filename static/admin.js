@@ -10,6 +10,17 @@ async function initAdmin() {
     const me = await res.json();
     if (me.role !== "admin") { window.location.href = "/"; return; }
 
+    if (window.CyberLogin) window.CyberLogin.updateNav(me);
+    document.getElementById("admin-link")?.style.setProperty("display", "none");
+    document.getElementById("settings-btn")?.style.setProperty("display", "none");
+
+    document.getElementById("logout-link")?.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await fetch("/api/logout", { method: "POST" });
+        localStorage.removeItem("token");
+        window.location.href = "/";
+    });
+
     initTabs();
     loadSources();
     loadStreams();
