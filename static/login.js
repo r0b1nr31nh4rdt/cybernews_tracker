@@ -69,6 +69,8 @@ function initLoginModal() {
         const username  = document.getElementById("reg-username").value.trim();
         const password  = document.getElementById("reg-password").value;
         const password2 = document.getElementById("reg-password2").value;
+        const email     = document.getElementById("reg-email").value.trim();
+        const agb       = document.getElementById("reg-agb").checked;
         const errorEl   = document.getElementById("register-error");
         const successEl = document.getElementById("register-success");
 
@@ -83,7 +85,7 @@ function initLoginModal() {
         const res = await fetch("/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, email, agb_accepted: agb })
         });
 
         const data = await res.json();

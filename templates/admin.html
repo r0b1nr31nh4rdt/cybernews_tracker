@@ -13,6 +13,7 @@
         <button class="admin-tab admin-tab--active" data-tab="sources">Quellen</button>
         <button class="admin-tab" data-tab="streams">Streams</button>
         <button class="admin-tab" data-tab="users">User</button>
+        <button class="admin-tab" data-tab="audit">Audit Log</button>
     </div>
 
     <!-- Quellen Tab -->
@@ -56,11 +57,27 @@
         <div id="streams-list" class="admin-list"></div>
     </div>
 
-    <!-- User Tab (Platzhalter für Briefing 14b) -->
+    <!-- User Tab -->
     <div class="admin-content" id="tab-users" style="display:none">
-        <p style="color:var(--text-muted); padding:20px">
-            User-Verwaltung folgt in Briefing 14b.
-        </p>
+        <div class="admin-toolbar">
+            <h2>User-Verwaltung</h2>
+        </div>
+        <div id="users-list" class="admin-list"></div>
+    </div>
+
+    <!-- Audit Log Tab -->
+    <div class="admin-content" id="tab-audit" style="display:none">
+        <div class="admin-toolbar">
+            <h2>Audit Log</h2>
+            <div style="display:flex; gap:8px; align-items:center">
+                <label style="font-size:12px; color:var(--text-muted)">
+                    <input type="checkbox" id="audit-filter-failed" />
+                    Nur Fehlschläge
+                </label>
+                <span id="audit-count" style="font-size:12px; color:var(--text-muted)"></span>
+            </div>
+        </div>
+        <div id="audit-list" class="admin-list"></div>
     </div>
 </main>
 {% endblock %}

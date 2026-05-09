@@ -996,6 +996,79 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 
 .admin-delete-btn:hover { background: var(--accent-red); color: #fff; }
 
+/* ── AGB Seite ───────────────────────────────────── */
+.agb-body h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 28px 0 10px;
+    color: var(--text);
+}
+
+.agb-body p, .agb-body li {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 8px;
+}
+
+.agb-body ul {
+    padding-left: 20px;
+    margin-bottom: 8px;
+}
+
+.agb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0 16px;
+}
+
+.agb-table th, .agb-table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.agb-table th {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--surface-2);
+}
+
+.agb-table td { color: var(--text-muted); }
+
+/* ── Audit Log ───────────────────────────────────── */
+.audit-row {
+    font-size: 12px;
+}
+
+.audit-row--fail {
+    border-left: 2px solid var(--accent-red);
+}
+
+.audit-status { font-size: 14px; flex-shrink: 0; }
+
+.audit-time {
+    color: var(--text-muted);
+    font-size: 11px;
+    flex-shrink: 0;
+    min-width: 130px;
+}
+
+/* Role Select in User-Liste */
+.role-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 4px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
 /* ── Footer ──────────────────────────────────────── */
 footer {
     text-align: center;

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Nutzungsbedingungen — CyberNews Tracker{% endblock %}
+
+{% block content %}
+<main style="max-width:760px; margin:0 auto; padding:32px 24px;">
+    <div style="margin-bottom:24px">
+        <a href="/" style="color:var(--text-muted); font-size:13px; text-decoration:none;">← Dashboard</a>
+    </div>
+
+    <h1 style="font-size:22px; font-weight:700; margin-bottom:6px;">Allgemeine Nutzungsbedingungen</h1>
+    <p style="color:var(--text-muted); font-size:13px; margin-bottom:32px;">Stand: Mai 2026</p>
+
+    <div class="agb-body">
+        <h2>1. Geltungsbereich</h2>
+        <p>Diese Nutzungsbedingungen gelten für die Nutzung des CyberNews Trackers.
+           Mit der Registrierung akzeptierst du diese Bedingungen.</p>
+
+        <h2>2. Leistungsumfang</h2>
+        <p>CyberNews Tracker ist ein persönliches Nachrichten-Dashboard das öffentlich
+           verfügbare RSS-Feeds, Wetterdaten und Finanzmarktdaten aggregiert und darstellt.
+           Der Dienst wird ohne Gewähr auf Verfügbarkeit, Vollständigkeit oder Aktualität
+           bereitgestellt.</p>
+
+        <h2>3. Registrierung &amp; Account</h2>
+        <ul>
+            <li>Die Registrierung ist kostenlos.</li>
+            <li>Du bist für die Sicherheit deines Passworts selbst verantwortlich.</li>
+            <li>Pro Person ist ein Account erlaubt.</li>
+            <li>Wir behalten uns vor, Accounts ohne Angabe von Gründen zu sperren oder zu löschen —
+                insbesondere bei Missbrauch.</li>
+        </ul>
+
+        <h2>4. Pflichten der Nutzer</h2>
+        <p>Du verpflichtest dich:</p>
+        <ul>
+            <li>Den Dienst nicht zu missbrauchen oder zu überlasten.</li>
+            <li>Keine automatisierten Massenanfragen (Scraping, Bots) zu stellen.</li>
+            <li>Keine falschen Angaben bei der Registrierung zu machen.</li>
+        </ul>
+
+        <h2>5. Datenschutz &amp; Gespeicherte Daten</h2>
+        <p>Folgende Daten werden gespeichert:</p>
+        <table class="agb-table">
+            <thead>
+                <tr><th>Datum</th><th>Zweck</th><th>Speicherdauer</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Username</td><td>Account-Identifikation</td><td>Bis zur Löschung des Accounts</td></tr>
+                <tr><td>Passwort (gehasht)</td><td>Authentifizierung</td><td>Bis zur Löschung des Accounts</td></tr>
+                <tr><td>E-Mail (optional)</td><td>Kontakt bei Änderungen</td><td>Bis zur Löschung des Accounts</td></tr>
+                <tr><td>Spracheinstellung</td><td>Personalisierung</td><td>Bis zur Löschung des Accounts</td></tr>
+                <tr><td>Watchlist</td><td>Personalisierung</td><td>Bis zur Löschung des Accounts</td></tr>
+                <tr><td>Login-Zeitstempel (anonymisiert)</td><td>Sicherheit / Audit</td><td>90 Tage</td></tr>
+            </tbody>
+        </table>
+        <p>Daten werden nicht an Dritte weitergegeben und nicht für Werbezwecke verwendet.</p>
+        <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und
+           Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).</p>
+
+        <h2>6. Externe Dienste</h2>
+        <p>CyberNews Tracker ruft folgende externe Dienste ab:</p>
+        <ul>
+            <li><strong>Open-Meteo</strong> (Wetterdaten)</li>
+            <li><strong>Nominatim / OpenStreetMap</strong> (Geocoding)</li>
+            <li><strong>Twelve Data</strong> (Finanzmarktdaten)</li>
+            <li><strong>Öffentliche RSS-Feeds</strong> diverser Nachrichtenanbieter</li>
+        </ul>
+        <p>Für die Inhalte dieser Dienste übernehmen wir keine Haftung.</p>
+
+        <h2>7. Haftungsausschluss</h2>
+        <p>Der Dienst wird "as is" bereitgestellt. Wir übernehmen keine Haftung für Schäden
+           die durch Nutzung, Nichtverfügbarkeit oder fehlerhafte Inhalte entstehen.
+           Finanzmarktdaten dienen ausschließlich der Information und stellen keine
+           Anlageberatung dar.</p>
+
+        <h2>8. Änderungen</h2>
+        <p>Wir behalten uns vor, diese Nutzungsbedingungen jederzeit zu ändern.
+           Registrierte Nutzer werden per E-Mail informiert sofern eine E-Mail-Adresse
+           hinterlegt ist.</p>
+
+        <h2>9. Anwendbares Recht</h2>
+        <p>Es gilt deutsches Recht.</p>
+    </div>
+</main>
+{% endblock %}

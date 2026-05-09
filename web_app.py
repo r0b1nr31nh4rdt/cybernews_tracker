@@ -9,6 +9,8 @@ from database import (
     admin_exists, create_user,
     get_news_sources, add_news_source, toggle_news_source, delete_news_source,
     get_streams, add_stream, delete_stream,
+    get_all_users, get_user_by_id, update_user_role, delete_user,
+    log_login_attempt, get_audit_log, cleanup_audit_log,
 )
 from news_collector import get_articles
 from auth import verify_user
@@ -70,15 +72,19 @@ def setup():
 
 @app.route("/api/login", methods=["POST"])
 def api_login():
-    username = request.json.get("username")
-    password = request.json.get("password")
+    username = request.json.get("username", "")
+    password = request.json.get("password", "")
+    ip = request.headers.get("X-Forwarded-For", request.remote_addr)
     user = verify_user(username, password)
     if user:
+        cleanup_audit_log()
+        log_login_attempt(username, success=True, ip_address=ip)
         token = create_access_token(
             identity=user["username"],
             additional_claims={"role": user["role"]}
         )
         return jsonify(access_token=token)
+    log_login_attempt(username, success=False, ip_address=ip)
     return jsonify({"msg": "Invalid credentials"}), 401
 
 @app.route("/api/me", methods=["GET"])
@@ -350,6 +356,71 @@ def admin_delete_stream(stream_id):
     delete_stream(stream_id)
     return jsonify({"success": True})
 
+# --- Admin Users API ---
+
+@app.route("/api/admin/users", methods=["GET"])
+@jwt_required()
+def admin_get_users():
+    err = require_admin()
+    if err: return err
+    users = get_all_users()
+    return jsonify({"users": [
+        {
+            "id":         u[0],
+            "username":   u[1],
+            "role":       u[2],
+            "email":      u[3] or "",
+            "created_at": u[4] or ""
+        }
+        for u in users
+    ]})
+
+@app.route("/api/admin/users/<int:user_id>/role", methods=["PATCH"])
+@jwt_required()
+def admin_update_role(user_id):
+    err = require_admin()
+    if err: return err
+    current_user = get_jwt_identity()
+    target = get_user_by_id(user_id)
+    if target and target[1] == current_user:
+        return jsonify({"error": "Du kannst deine eigene Rolle nicht ändern"}), 400
+    role = request.json.get("role")
+    try:
+        update_user_role(user_id, role)
+        return jsonify({"success": True})
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/api/admin/users/<int:user_id>", methods=["DELETE"])
+@jwt_required()
+def admin_delete_user(user_id):
+    err = require_admin()
+    if err: return err
+    current_user = get_jwt_identity()
+    target = get_user_by_id(user_id)
+    if target and target[1] == current_user:
+        return jsonify({"error": "Du kannst deinen eigenen Account nicht löschen"}), 400
+    delete_user(user_id)
+    return jsonify({"success": True})
+
+@app.route("/api/admin/audit", methods=["GET"])
+@jwt_required()
+def admin_get_audit():
+    err = require_admin()
+    if err: return err
+    limit = min(int(request.args.get("limit", 100)), 500)
+    entries = get_audit_log(limit=limit)
+    return jsonify({"entries": [
+        {
+            "id":        e[0],
+            "timestamp": e[1],
+            "username":  e[2],
+            "success":   bool(e[3]),
+            "ip_hash":   e[4]
+        }
+        for e in entries
+    ]})
+
 # --- Register ---
 
 @app.route("/api/register", methods=["POST"])
@@ -357,17 +428,25 @@ def register():
     data     = request.json
     username = data.get("username", "").strip()
     password = data.get("password", "")
+    email    = data.get("email", "").strip() or None
+    agb      = data.get("agb_accepted", False)
 
+    if not agb:
+        return jsonify({"error": "Bitte akzeptiere die Nutzungsbedingungen"}), 400
     if not username or not password:
         return jsonify({"error": "Username und Passwort erforderlich"}), 400
     if len(password) < 8:
         return jsonify({"error": "Passwort muss mindestens 8 Zeichen haben"}), 400
 
     try:
-        create_user(username, password, role="analyst")
+        create_user(username, password, role="analyst", email=email)
         return jsonify({"success": True})
     except Exception:
         return jsonify({"error": "Username bereits vergeben"}), 409
+
+@app.route("/agb")
+def agb():
+    return render_template("agb.html")
 
 if __name__ == "__main__":
     init_db()

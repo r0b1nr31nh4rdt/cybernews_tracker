@@ -169,4 +169,120 @@ window.toggleSource = toggleSource;
 window.deleteSource = deleteSource;
 window.deleteStream = deleteStream;
 
+// ── User-Verwaltung ───────────────────────────────────
+
+async function loadUsers() {
+    const res = await fetch("/api/admin/users", {
+        headers: { Authorization: "Bearer " + adminToken }
+    });
+    const data = await res.json();
+    const list = document.getElementById("users-list");
+    if (!list) return;
+
+    list.innerHTML = data.users.map(u => `
+        <div class="admin-row">
+            <span class="admin-row__name">${u.username}</span>
+            <span class="admin-row__badge ${u.role === 'admin' ? 'cat--security' : 'cat--networks'}">
+                ${u.role}
+            </span>
+            <span style="font-size:11px; color:var(--text-muted); flex:1">
+                ${u.email || "keine E-Mail"}
+            </span>
+            <span style="font-size:11px; color:var(--text-muted)">
+                ${u.created_at ? new Date(u.created_at).toLocaleDateString("de-DE") : ""}
+            </span>
+            <select class="role-select" data-user-id="${u.id}"
+                onchange="updateRole(${u.id}, this.value)">
+                <option value="analyst" ${u.role === 'analyst' ? 'selected' : ''}>Analyst</option>
+                <option value="admin"   ${u.role === 'admin'   ? 'selected' : ''}>Admin</option>
+            </select>
+            <button class="admin-delete-btn"
+                onclick="deleteUser(${u.id}, '${u.username}')">Löschen</button>
+        </div>
+    `).join("");
+}
+
+async function updateRole(userId, role) {
+    const res = await fetch(`/api/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: {
+            Authorization: "Bearer " + adminToken,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ role })
+    });
+    if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Fehler beim Ändern der Rolle");
+        loadUsers();
+    }
+}
+
+async function deleteUser(userId, username) {
+    if (!confirm(`User "${username}" wirklich löschen?`)) return;
+    const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + adminToken }
+    });
+    if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Fehler beim Löschen");
+        return;
+    }
+    loadUsers();
+}
+
+// ── Audit Log ─────────────────────────────────────────
+
+let auditEntries = [];
+
+async function loadAudit() {
+    const res = await fetch("/api/admin/audit?limit=200", {
+        headers: { Authorization: "Bearer " + adminToken }
+    });
+    const data = await res.json();
+    auditEntries = data.entries || [];
+    renderAudit();
+
+    document.getElementById("audit-filter-failed")
+        ?.addEventListener("change", renderAudit);
+}
+
+function renderAudit() {
+    const list     = document.getElementById("audit-list");
+    const onlyFail = document.getElementById("audit-filter-failed")?.checked;
+    const countEl  = document.getElementById("audit-count");
+    if (!list) return;
+
+    const filtered = onlyFail
+        ? auditEntries.filter(e => !e.success)
+        : auditEntries;
+
+    if (countEl) countEl.textContent = `${filtered.length} Einträge`;
+
+    list.innerHTML = filtered.map(e => `
+        <div class="admin-row audit-row ${e.success ? "" : "audit-row--fail"}">
+            <span class="audit-status">${e.success ? "✅" : "❌"}</span>
+            <span class="audit-time">
+                ${new Date(e.timestamp).toLocaleString("de-DE")}
+            </span>
+            <span class="admin-row__name">${e.username}</span>
+            <span style="font-size:11px; color:var(--text-muted); font-family:monospace">
+                IP: ${e.ip_hash}…
+            </span>
+        </div>
+    `).join("");
+}
+
+// Tab-Loader: Daten nur laden wenn Tab aktiv wird
+document.querySelectorAll(".admin-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+        if (tab.dataset.tab === "users") loadUsers();
+        if (tab.dataset.tab === "audit") loadAudit();
+    });
+});
+
+window.updateRole = updateRole;
+window.deleteUser = deleteUser;
+
 document.addEventListener("DOMContentLoaded", initAdmin);

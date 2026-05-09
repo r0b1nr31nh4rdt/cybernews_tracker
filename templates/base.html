@@ -85,6 +85,17 @@
                             <label>Passwort wiederholen</label>
                             <input type="password" id="reg-password2" required />
                         </div>
+                        <div class="login-field">
+                            <label>E-Mail (optional)</label>
+                            <input type="email" id="reg-email" autocomplete="email" />
+                        </div>
+                        <div class="login-field" style="flex-direction:row; align-items:center; gap:8px">
+                            <input type="checkbox" id="reg-agb" required />
+                            <label for="reg-agb" style="text-transform:none; letter-spacing:0; font-size:12px">
+                                Ich akzeptiere die
+                                <a href="/agb" target="_blank" style="color:var(--accent)">Nutzungsbedingungen</a>
+                            </label>
+                        </div>
                         <p id="register-error" class="login-error"></p>
                         <p id="register-success" style="color:var(--accent-green);font-size:13px;min-height:18px"></p>
                         <button type="submit" class="login-submit">Registrieren</button>
