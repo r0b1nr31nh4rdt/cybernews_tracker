@@ -29,7 +29,7 @@
                     <option value="us">🇺🇸 US / $</option>
                 </select>
                 <a href="/admin" id="admin-link" style="display:none">Admin</a>
-                <a href="/login" id="login-link" style="display:none">Login</a>
+                <button id="login-btn">Login</button>
                 <a href="#" id="logout-link" style="display:none">Logout</a>
             </nav>
         </header>
@@ -49,45 +49,34 @@
                 });
             }
         </script>
-        <script>
-            (async () => {
-                const token = localStorage.getItem("token");
-                const loginLink  = document.getElementById("login-link");
-                const logoutLink = document.getElementById("logout-link");
-                const adminLink  = document.getElementById("admin-link");
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal" style="display:none">
+            <div class="modal__backdrop" id="login-backdrop"></div>
+            <div class="modal__content modal__content--login">
+                <button class="modal__close" id="login-modal-close">×</button>
+                <h2 class="login-modal__title">Anmelden</h2>
+                <p class="login-modal__subtitle">
+                    Für persönliche Features wie Watchlist und Admin-Zugriff.
+                </p>
+                <form id="login-form">
+                    <div class="login-field">
+                        <label for="username">Benutzername</label>
+                        <input type="text" id="username" required autocomplete="username" />
+                    </div>
+                    <div class="login-field">
+                        <label for="password">Passwort</label>
+                        <input type="password" id="password" required autocomplete="current-password" />
+                    </div>
+                    <p id="login-error" class="login-error"></p>
+                    <button type="submit" class="login-submit">Einloggen</button>
+                </form>
+            </div>
+        </div>
 
-                if (!token) {
-                    if (loginLink) loginLink.style.display = "inline";
-                    return;
-                }
-
-                const res = await fetch("/api/me", {
-                    headers: { Authorization: "Bearer " + token }
-                });
-
-                if (!res.ok) {
-                    localStorage.removeItem("token");
-                    if (loginLink) loginLink.style.display = "inline";
-                    return;
-                }
-
-                const me = await res.json();
-                if (logoutLink) logoutLink.style.display = "inline";
-                if (adminLink && me.role === "admin") adminLink.style.display = "inline";
-
-                if (logoutLink) {
-                    logoutLink.addEventListener("click", async (e) => {
-                        e.preventDefault();
-                        await fetch("/api/logout", { method: "POST" });
-                        localStorage.removeItem("token");
-                        window.location.href = "/login";
-                    });
-                }
-            })();
-        </script>
         <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+        <script src="/static/login.js"></script>
         {% block scripts %}
         {% endblock %}
     </body>

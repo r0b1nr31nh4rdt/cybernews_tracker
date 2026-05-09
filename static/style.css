@@ -721,6 +721,87 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
     color: var(--text-muted);
 }
 
+/* ── Login Modal ─────────────────────────────────── */
+.modal__content--login {
+    width: min(420px, 90vw);
+    padding: 32px;
+}
+
+.login-modal__title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.login-modal__subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+}
+
+.login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.login-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.login-field input {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.login-field input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.login-error {
+    font-size: 12px;
+    color: var(--accent-red);
+    min-height: 18px;
+    margin-bottom: 8px;
+}
+
+.login-submit {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #000;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 4px;
+}
+
+.login-submit:hover { opacity: 0.85; }
+
+#login-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+#login-btn:hover { border-color: var(--accent); }
+
 /* ── Footer ──────────────────────────────────────── */
 footer {
     text-align: center;

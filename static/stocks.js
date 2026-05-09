@@ -2,6 +2,16 @@ let stocksWatchlist = [];
 let stocksRefreshInterval = null;
 
 function initStocks() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        const emptyEl = document.getElementById("stocks-empty");
+        if (emptyEl) {
+            emptyEl.textContent = "🔒 Login für persönliche Watchlist";
+            emptyEl.style.display = "block";
+        }
+        return;
+    }
+
     const addBtn = document.getElementById("stocks-add-btn");
     const input = document.getElementById("stocks-input");
     if (!addBtn || !input) return;
@@ -149,4 +159,8 @@ function renderQuotes(quotes) {
     });
 }
 
-window.CyberStocks = { init: initStocks };
+window.CyberStocks = { init: initStocks, reload: () => {
+    if (stocksRefreshInterval) clearInterval(stocksRefreshInterval);
+    stocksWatchlist = [];
+    initStocks();
+}};

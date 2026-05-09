@@ -40,24 +40,16 @@ function initNews() {
 }
 
 async function loadNews() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     const loadingEl = document.getElementById("headlines-loading");
 
     if (loadingEl) loadingEl.style.display = "flex";
 
     try {
         const category = document.getElementById("nav-filter")?.value || "all";
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: "Bearer " + token } : {};
 
-        const res = await fetch(`/api/news?category=${category}&limit=100`, {
-            headers: { Authorization: "Bearer " + localStorage.getItem("token") }
-        });
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            window.location.href = "/login";
-            return;
-        }
+        const res = await fetch(`/api/news?category=${category}&limit=100`, { headers });
         if (!res.ok) throw new Error("API Fehler");
 
         const data = await res.json();

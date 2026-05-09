@@ -1,20 +1,23 @@
-if (!localStorage.getItem("token")) window.location.href = "/login";
-
-async function apiFetch(path) {
-    const token = localStorage.getItem("token");
-    const response = await fetch(path, {
-        headers: { Authorization: "Bearer " + token }
-    });
-    if (response.status === 401) {
-        localStorage.removeItem("token");
-        window.location.href = "/login";
-    }
-    return response.json();
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
-    const me = await apiFetch("/api/me");
-    console.log("Eingeloggt als:", me.username, "| Rolle:", me.role);
+    const token = localStorage.getItem("token");
+    let me = null;
+
+    if (token) {
+        try {
+            const res = await fetch("/api/me", {
+                headers: { Authorization: "Bearer " + token }
+            });
+            if (res.ok) {
+                me = await res.json();
+            } else {
+                localStorage.removeItem("token");
+            }
+        } catch (err) {
+            console.error("Auth-Check Fehler:", err);
+        }
+    }
+
+    if (window.CyberLogin) window.CyberLogin.updateNav(me);
 
     for (const [name, mod] of [
         ["CyberGrid",    window.CyberGrid],
@@ -23,6 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ["CyberWeather", window.CyberWeather],
         ["CyberStocks",  window.CyberStocks],
         ["CyberNews",    window.CyberNews],
+        ["CyberLogin",   window.CyberLogin],
     ]) {
         try {
             if (mod) mod.init();
