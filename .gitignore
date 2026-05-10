@@ -7,7 +7,7 @@ briefing*
 **/briefing*
 
 # Datenbank
-users.db
+*.db
 
 # macOS
 .DS_Store
