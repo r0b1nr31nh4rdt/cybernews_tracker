@@ -48,56 +48,10 @@ function initLoginModal() {
         });
     }
 
-    // Tab-Switcher
-    document.getElementById("tab-login-btn")?.addEventListener("click", () => {
-        document.getElementById("login-form-wrapper").style.display = "block";
-        document.getElementById("register-form-wrapper").style.display = "none";
-        document.getElementById("tab-login-btn").classList.add("auth-tab--active");
-        document.getElementById("tab-register-btn").classList.remove("auth-tab--active");
-    });
-
-    document.getElementById("tab-register-btn")?.addEventListener("click", () => {
-        document.getElementById("login-form-wrapper").style.display = "none";
-        document.getElementById("register-form-wrapper").style.display = "block";
-        document.getElementById("tab-register-btn").classList.add("auth-tab--active");
-        document.getElementById("tab-login-btn").classList.remove("auth-tab--active");
-    });
-
-    // Registrierung
-    document.getElementById("register-form")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const username  = document.getElementById("reg-username").value.trim();
-        const password  = document.getElementById("reg-password").value;
-        const password2 = document.getElementById("reg-password2").value;
-        const email     = document.getElementById("reg-email").value.trim();
-        const agb       = document.getElementById("reg-agb").checked;
-        const errorEl   = document.getElementById("register-error");
-        const successEl = document.getElementById("register-success");
-
-        errorEl.textContent  = "";
-        successEl.textContent = "";
-
-        if (password !== password2) {
-            errorEl.textContent = "Passwörter stimmen nicht überein.";
-            return;
-        }
-
-        const res = await fetch("/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password, email, agb_accepted: agb })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            successEl.textContent = "Account erstellt — du kannst dich jetzt einloggen.";
-            document.getElementById("reg-username").value  = "";
-            document.getElementById("reg-password").value  = "";
-            document.getElementById("reg-password2").value = "";
-        } else {
-            errorEl.textContent = data.error || "Fehler bei der Registrierung.";
-        }
-    });
+    // ?login=1 → Modal automatisch öffnen
+    if (new URLSearchParams(window.location.search).get("login") === "1") {
+        openLoginModal();
+    }
 }
 
 function openLoginModal() {

@@ -817,27 +817,16 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 .login-submit:hover { opacity: 0.85; }
 
 /* ── Auth Tabs im Login Modal ────────────────────── */
-.auth-tabs {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-}
-
-.auth-tab {
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
+.login-register-hint {
+    text-align: center;
+    font-size: 12px;
     color: var(--text-muted);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 6px 12px;
-    margin-bottom: -1px;
+    margin-top: 12px;
 }
 
-.auth-tab--active {
+.login-register-hint a {
     color: var(--accent);
-    border-bottom-color: var(--accent);
+    text-decoration: none;
 }
 
 #login-btn {
@@ -855,6 +844,7 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 /* ── Admin Panel ─────────────────────────────────── */
 #admin-panel {
     padding: 24px;
+    width: 100%;
     max-width: 1000px;
     margin: 0 auto;
 }
@@ -894,13 +884,19 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
     border-bottom: 2px solid transparent;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     padding: 8px 16px;
     margin-bottom: -1px;
+    white-space: nowrap;
+    min-width: max-content;
 }
 
 .admin-tab:hover { color: var(--text); }
-.admin-tab--active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.admin-tab--active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
 
 .admin-toolbar {
     display: flex;
