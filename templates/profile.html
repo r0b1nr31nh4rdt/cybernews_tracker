@@ -1,13 +1,83 @@
 {% extends "base.html" %}
 
-{% block title %}User Profile - {{ username }}{% endblock %}
+{% block title %}Profil — CyberNews Tracker{% endblock %}
 
 {% block content %}
-    <h1>Welcome, {{ username }}!</h1>
-    <p>Your favorite language is: {{ language }}</p>
-        <ul>
-            {% for hobby in hobbies %}
-                <li>{{ hobby }}</li>
-            {% endfor %}
-        </ul>
+<main id="profile-panel">
+    <div class="admin-header">
+        <h1>Mein Profil</h1>
+        <a href="/" class="admin-dashboard-btn">← Dashboard</a>
+    </div>
+
+    <div class="admin-tabs">
+        <button class="admin-tab admin-tab--active" data-tab="sources">Quellen</button>
+        <button class="admin-tab" data-tab="settings">Einstellungen</button>
+        <button class="admin-tab" data-tab="account">Account</button>
+    </div>
+
+    <!-- Quellen Tab -->
+    <div class="admin-content" id="tab-sources">
+
+        <div class="admin-toolbar">
+            <h2>Globale Quellen</h2>
+            <span style="font-size:12px; color:var(--text-muted)">
+                Deaktiviere Quellen die du nicht sehen möchtest
+            </span>
+        </div>
+
+        <div id="global-sources-list" class="profile-sources-grid"></div>
+
+        <div style="margin: 12px 0 24px">
+            <button id="save-hidden-btn" class="admin-add-btn">
+                Auswahl speichern
+            </button>
+        </div>
+
+        <div class="admin-toolbar">
+            <h2>Eigene Quellen</h2>
+            <button class="admin-add-btn" id="add-user-source-btn">
+                + Quelle hinzufügen
+            </button>
+        </div>
+
+        <div id="add-user-source-form" class="admin-form" style="display:none">
+            <input type="text" id="user-source-name"
+                placeholder="Name (z.B. Mein Blog)" />
+            <input type="text" id="user-source-url"
+                placeholder="RSS URL" />
+            <select id="user-source-category">
+                <option value="security">Security</option>
+                <option value="geopolitics">Geopolitik</option>
+                <option value="science">Wissenschaft</option>
+                <option value="networks">Netzwerke</option>
+                <option value="local">DE/EU</option>
+            </select>
+            <button id="user-source-save-btn">Speichern</button>
+            <button id="user-source-cancel-btn">Abbrechen</button>
+        </div>
+
+        <div id="user-sources-list" class="admin-list"></div>
+
+    </div>
+
+    <!-- Einstellungen Tab (Platzhalter) -->
+    <div class="admin-content" id="tab-settings" style="display:none">
+        <div style="padding: 24px; color: var(--text-muted); font-size:13px">
+            Weitere Einstellungen folgen in einem späteren Update.
+        </div>
+    </div>
+
+    <!-- Account Tab (Platzhalter) -->
+    <div class="admin-content" id="tab-account" style="display:none">
+        <div style="padding: 24px; color: var(--text-muted); font-size:13px">
+            Account-Verwaltung (E-Mail, Passwort, Löschen) folgt in einem
+            späteren Update.
+        </div>
+    </div>
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/profile.js"></script>
 {% endblock %}

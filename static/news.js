@@ -136,18 +136,24 @@ function renderHeadlines(articles) {
             <div class="headline-item ${i === newsActiveIndex ? "headline-item--active" : ""}"
                  data-index="${i}"
                  onclick="showArticle(${i})">
+                ${article.image
+                    ? `<img class="headline-thumb" src="${article.image}" alt=""
+                            onerror="this.style.display='none'">`
+                    : `<span class="headline-thumb-empty"></span>`}
                 <span class="headline-cat ${categoryClass}"></span>
-                <span class="headline-title">${escapeHtml(article.title)}</span>
-                <span class="headline-meta">
-                    <span class="headline-source">${escapeHtml(article.source)}</span>
-                    <span class="headline-time">${time}</span>
-                </span>
+                <div class="headline-content">
+                    <span class="headline-title">${escapeHtml(article.title)}</span>
+                    <span class="headline-meta">
+                        <span class="headline-source">${escapeHtml(article.source)}</span>
+                        <span class="headline-time">${time}</span>
+                    </span>
+                </div>
             </div>
         `;
     }).join("");
 }
 
-function showArticle(index) {
+async function showArticle(index) {
     const article = newsFilteredArticles[index];
     if (!article) return;
 
@@ -163,6 +169,9 @@ function showArticle(index) {
     const viewer = document.getElementById("article-viewer");
     if (!viewer) return;
 
+    viewer.innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+    await new Promise(r => setTimeout(r, 50));
+
     const published = article.published
         ? new Date(article.published).toLocaleString("de-DE", {
             day: "2-digit", month: "2-digit", year: "numeric",
@@ -175,15 +184,25 @@ function showArticle(index) {
             <div class="article-card__category cat--${article.category}">
                 ${categoryLabel(article.category)}
             </div>
-            <h2 class="article-card__title">${escapeHtml(article.title)}</h2>
-            <div class="article-card__meta">
-                <span>${escapeHtml(article.source)}</span>
-                ${published ? `<span>${published}</span>` : ""}
+            <div class="article-card__body-wrap">
+                ${article.image ? `
+                    <div class="article-card__image--side">
+                        <img src="${article.image}" alt=""
+                             onerror="this.parentElement.style.display='none'" />
+                    </div>
+                ` : ""}
+                <div class="article-card__body">
+                    <h2 class="article-card__title">${escapeHtml(article.title)}</h2>
+                    <div class="article-card__meta">
+                        <span>${escapeHtml(article.source)}</span>
+                        ${published ? `<span>${published}</span>` : ""}
+                    </div>
+                    <p class="article-card__summary">
+                        ${escapeHtml(stripHtml(article.summary || "Kein Teaser verfügbar."))}
+                    </p>
+                    <div class="article-card__hint">🔍 Klicken für Vollansicht</div>
+                </div>
             </div>
-            <p class="article-card__summary">
-                ${escapeHtml(stripHtml(article.summary || "Kein Teaser verfügbar."))}
-            </p>
-            <div class="article-card__hint">🔍 Klicken für Vollansicht</div>
         </div>
         <a href="${article.link}" target="_blank" rel="noopener noreferrer"
            class="article-external-link"

@@ -72,6 +72,18 @@ def init_db():
     """)
 
     cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_sources (
+            id       INTEGER PRIMARY KEY,
+            user_id  INTEGER,
+            name     TEXT,
+            rss_url  TEXT,
+            category TEXT,
+            active   INTEGER DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """)
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_favorites (
             id INTEGER PRIMARY KEY,
             user_id INTEGER,
@@ -329,6 +341,57 @@ def get_watchlist(user_id):
         return []
     settings = profile.get("settings", {})
     return settings.get("watchlist", [])
+
+def get_user_sources(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT * FROM user_sources WHERE user_id = ? AND active = 1",
+        (user_id,)
+    )
+    sources = cursor.fetchall()
+    conn.close()
+    return sources
+
+def add_user_source(user_id, name, rss_url, category):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO user_sources (user_id, name, rss_url, category) VALUES (?, ?, ?, ?)",
+        (user_id, name, rss_url, category)
+    )
+    conn.commit()
+    conn.close()
+
+def delete_user_source(source_id, user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM user_sources WHERE id = ? AND user_id = ?",
+        (source_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+def get_hidden_sources(user_id):
+    profile = get_user_profile(user_id)
+    if not profile:
+        return []
+    return profile.get("settings", {}).get("hidden_sources", [])
+
+def save_hidden_sources(user_id, hidden_source_ids):
+    profile = get_user_profile(user_id)
+    if not profile:
+        create_user_profile(user_id, settings={"hidden_sources": hidden_source_ids})
+        return
+    settings = profile.get("settings", {})
+    settings["hidden_sources"] = hidden_source_ids
+    update_user_profile(
+        user_id,
+        language=profile.get("language"),
+        hobbies=profile.get("hobbies", []),
+        settings=settings
+    )
 
 def get_grid_state(user_id):
     profile = get_user_profile(user_id)

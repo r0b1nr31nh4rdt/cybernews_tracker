@@ -86,19 +86,25 @@ async function onLoginSuccess() {
 }
 
 function updateNav(me) {
-    const loginBtn   = document.getElementById("login-btn");
-    const logoutLink = document.getElementById("logout-link");
-    const adminLink  = document.getElementById("admin-link");
+    const loginBtn    = document.getElementById("login-btn");
+    const logoutLink  = document.getElementById("logout-link");
+    const adminLink   = document.getElementById("admin-link");
+    const profileLink = document.getElementById("profile-link");
 
     if (me) {
-        if (loginBtn)   loginBtn.style.display   = "none";
-        if (logoutLink) logoutLink.style.display  = "inline";
-        if (adminLink)  adminLink.style.display   =
+        if (loginBtn)    loginBtn.style.display    = "none";
+        if (logoutLink)  logoutLink.style.display   = "inline";
+        if (profileLink) {
+            profileLink.style.display = "inline";
+            profileLink.textContent   = `👤 ${me.username}`;
+        }
+        if (adminLink) adminLink.style.display =
             me.role === "admin" ? "inline" : "none";
     } else {
-        if (loginBtn)   loginBtn.style.display   = "inline";
-        if (logoutLink) logoutLink.style.display  = "none";
-        if (adminLink)  adminLink.style.display   = "none";
+        if (loginBtn)    loginBtn.style.display    = "inline";
+        if (logoutLink)  logoutLink.style.display   = "none";
+        if (profileLink) profileLink.style.display  = "none";
+        if (adminLink)   adminLink.style.display    = "none";
     }
 }
 

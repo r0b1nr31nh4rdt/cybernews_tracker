@@ -12,6 +12,8 @@ from database import (
     get_all_users, get_user_by_id, update_user_role, delete_user,
     log_login_attempt, get_audit_log, cleanup_audit_log,
     get_grid_state, save_grid_state,
+    get_user_sources, add_user_source, delete_user_source,
+    get_hidden_sources, save_hidden_sources,
 )
 from news_collector import get_articles
 from auth import verify_user
@@ -281,9 +283,26 @@ def get_quotes():
 @app.route("/api/news", methods=["GET"])
 @jwt_required(optional=True)
 def api_news():
+    from database import get_user
     category = request.args.get("category", "all")
-    limit    = min(int(request.args.get("limit", 50)), 100)
-    articles = get_articles(category=category, limit=limit)
+    limit    = min(int(request.args.get("limit", 100)), 100)
+
+    user_id = None
+    hidden  = []
+
+    username = get_jwt_identity()
+    if username:
+        db_user = get_user(username)
+        if db_user:
+            user_id = db_user[0]
+            hidden  = get_hidden_sources(user_id)
+
+    articles = get_articles(
+        category=category,
+        limit=limit,
+        user_id=user_id,
+        hidden_source_ids=hidden
+    )
     return jsonify({"articles": articles, "count": len(articles)})
 
 @app.route("/api/streams", methods=["GET"])
@@ -447,6 +466,90 @@ def admin_get_audit():
         for e in entries
     ]})
 
+# --- Profile Sources API ---
+
+@app.route("/api/profile/sources", methods=["GET"])
+@jwt_required()
+def profile_get_sources():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user  = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    user_id        = db_user[0]
+    global_sources = get_news_sources(only_active=False)
+    hidden         = get_hidden_sources(user_id)
+    user_sources   = get_user_sources(user_id)
+
+    return jsonify({
+        "global_sources": [
+            {
+                "id":       s[0],
+                "name":     s[1],
+                "rss_url":  s[2],
+                "category": s[3],
+                "active":   bool(s[4]),
+                "enabled":  s[0] not in hidden
+            }
+            for s in global_sources if s[4]
+        ],
+        "user_sources": [
+            {
+                "id":       s[0],
+                "name":     s[2],
+                "rss_url":  s[3],
+                "category": s[4]
+            }
+            for s in user_sources
+        ]
+    })
+
+@app.route("/api/profile/sources/hidden", methods=["POST"])
+@jwt_required()
+def profile_save_hidden():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user  = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    hidden = request.json.get("hidden_source_ids", [])
+    save_hidden_sources(db_user[0], hidden)
+    return jsonify({"success": True})
+
+@app.route("/api/profile/sources/user", methods=["POST"])
+@jwt_required()
+def profile_add_user_source():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user  = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    data     = request.json
+    name     = data.get("name", "").strip()
+    rss_url  = data.get("rss_url", "").strip()
+    category = data.get("category", "security")
+
+    if not name or not rss_url:
+        return jsonify({"error": "Name und URL erforderlich"}), 400
+
+    add_user_source(db_user[0], name, rss_url, category)
+    return jsonify({"success": True})
+
+@app.route("/api/profile/sources/user/<int:source_id>", methods=["DELETE"])
+@jwt_required()
+def profile_delete_user_source(source_id):
+    from database import get_user
+    username = get_jwt_identity()
+    db_user  = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    delete_user_source(source_id, db_user[0])
+    return jsonify({"success": True})
+
 # --- Register ---
 
 @app.route("/api/register", methods=["POST"])
@@ -469,6 +572,14 @@ def register():
         return jsonify({"success": True})
     except Exception:
         return jsonify({"error": "Username bereits vergeben"}), 409
+
+@app.route("/profile")
+def profile_page():
+    return render_template("profile.html")
+
+@app.route("/register")
+def register_page():
+    return render_template("register.html")
 
 @app.route("/agb")
 def agb():
