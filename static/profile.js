@@ -18,6 +18,7 @@ async function initProfile() {
     const me = await res.json();
     if (window.CyberLogin) window.CyberLogin.updateNav(me);
 
+    setupDelegation();
     initTabs();
     loadSources();
 }
@@ -35,6 +36,26 @@ function initTabs() {
             document.getElementById("tab-" + tab.dataset.tab).style.display = "block";
         });
     });
+}
+
+// ── Event-Delegation für dynamische Listen ─────────────
+
+function setupDelegation() {
+    const globalList = document.getElementById("global-sources-list");
+    if (globalList) {
+        globalList.addEventListener("change", (e) => {
+            const cb = e.target.closest('input[type="checkbox"][data-source-id]');
+            if (cb) toggleGlobalSource(parseInt(cb.dataset.sourceId), cb.checked);
+        });
+    }
+
+    const userSourcesList = document.getElementById("user-sources-list");
+    if (userSourcesList) {
+        userSourcesList.addEventListener("click", (e) => {
+            const btn = e.target.closest(".user-source-delete-btn");
+            if (btn) deleteUserSource(parseInt(btn.dataset.id));
+        });
+    }
 }
 
 // ── Quellen laden ─────────────────────────────────────
@@ -82,8 +103,7 @@ function renderGlobalSources(sources) {
                 <label class="settings-check source-check">
                     <input type="checkbox"
                         data-source-id="${s.id}"
-                        ${s.enabled ? "checked" : ""}
-                        onchange="toggleGlobalSource(${s.id}, this.checked)" />
+                        ${s.enabled ? "checked" : ""} />
                     <span>${s.name}</span>
                 </label>
             `).join("")}
@@ -137,8 +157,7 @@ function renderUserSources(sources) {
             <span class="admin-row__badge cat--${s.category}">${s.category}</span>
             <span class="admin-row__name">${s.name}</span>
             <span class="admin-row__url">${s.rss_url}</span>
-            <button class="admin-delete-btn"
-                onclick="deleteUserSource(${s.id})">Löschen</button>
+            <button class="admin-delete-btn user-source-delete-btn" data-id="${s.id}">Löschen</button>
         </div>
     `).join("");
 }
@@ -186,8 +205,5 @@ document.getElementById("user-source-save-btn")
             loadSources();
         }
     });
-
-window.toggleGlobalSource = toggleGlobalSource;
-window.deleteUserSource   = deleteUserSource;
 
 document.addEventListener("DOMContentLoaded", initProfile);
