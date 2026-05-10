@@ -32,6 +32,8 @@ function initLoginModal() {
             localStorage.setItem("token", data.access_token);
             closeLoginModal();
             onLoginSuccess();
+        } else if (res.status === 429) {
+            if (errorEl) errorEl.textContent = "Zu viele Versuche — bitte warte einen Moment.";
         } else {
             if (errorEl) errorEl.textContent = "Ungültige Zugangsdaten";
         }

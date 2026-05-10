@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             });
             if (res.ok) {
                 me = await res.json();
+            } else if (res.status === 401) {
+                localStorage.removeItem("token");
+                if (window.CyberLogin) window.CyberLogin.updateNav(null);
             } else {
                 localStorage.removeItem("token");
             }

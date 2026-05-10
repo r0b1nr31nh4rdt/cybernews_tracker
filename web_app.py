@@ -4,6 +4,9 @@ from flask_jwt_extended import (
     JWTManager, create_access_token,
     jwt_required, get_jwt_identity, get_jwt
 )
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
 from database import (
     init_db, get_watchlist, save_watchlist,
     admin_exists, create_user,
@@ -18,13 +21,61 @@ from database import (
 from news_collector import get_articles
 from auth import verify_user
 from dotenv import load_dotenv
+from datetime import timedelta
 import os
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
 jwt = JWTManager(app)
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=[],
+    storage_uri="memory://",
+)
+
+csp = {
+    "default-src": "'self'",
+    "script-src": [
+        "'self'",
+        "cdn.jsdelivr.net",
+    ],
+    "style-src": [
+        "'self'",
+        "cdn.jsdelivr.net",
+        "'unsafe-inline'",
+    ],
+    "img-src": [
+        "'self'",
+        "data:",
+        "*",
+    ],
+    "media-src": [
+        "'self'",
+        "*",
+    ],
+    "connect-src": [
+        "'self'",
+        "api.twelvedata.com",
+        "api.open-meteo.com",
+        "geocoding-api.open-meteo.com",
+        "nominatim.openstreetmap.org",
+    ],
+    "font-src": "'self'",
+    "frame-src": "'none'",
+}
+
+Talisman(
+    app,
+    content_security_policy=csp,
+    force_https=False,
+    strict_transport_security=False,
+)
+
 FLASK_PORT = os.getenv("FLASK_PORT")
 TWELVEDATA_KEY = os.getenv("TWELVEDATA_API_KEY")
 
@@ -43,6 +94,7 @@ def admin_page():
     return render_template("admin.html")
 
 @app.route("/setup", methods=["GET", "POST"])
+@limiter.limit("10 per hour")
 def setup():
     init_db()
     if admin_exists():
@@ -74,6 +126,7 @@ def setup():
 # --- Auth API ---
 
 @app.route("/api/login", methods=["POST"])
+@limiter.limit("10 per minute")
 def api_login():
     username = request.json.get("username", "")
     password = request.json.get("password", "")
@@ -556,6 +609,7 @@ def profile_delete_user_source(source_id):
 # --- Register ---
 
 @app.route("/api/register", methods=["POST"])
+@limiter.limit("5 per hour")
 def register():
     data     = request.json
     username = data.get("username", "").strip()
@@ -590,4 +644,6 @@ def agb():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True, host="0.0.0.0", port=int(os.getenv("FLASK_PORT", 5001)))
+    debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    port  = int(os.getenv("FLASK_PORT", 5001))
+    app.run(debug=debug, host="0.0.0.0", port=port)
