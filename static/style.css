@@ -529,6 +529,19 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
     background: var(--surface-2);
 }
 
+#stream-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 36px;
+    cursor: pointer;
+    z-index: 10;
+}
+
 /* ── SortableJS Drag-State ───────────────────────── */
 .sortable-ghost {
     opacity: 0.3;

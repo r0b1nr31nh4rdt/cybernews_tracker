@@ -37,6 +37,14 @@ function initNews() {
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeModal();
     });
+
+    const headlinesList = document.getElementById("headlines-list");
+    if (headlinesList) {
+        headlinesList.addEventListener("click", (e) => {
+            const item = e.target.closest(".headline-item");
+            if (item) showArticle(parseInt(item.dataset.index));
+        });
+    }
 }
 
 async function loadNews() {
@@ -134,11 +142,9 @@ function renderHeadlines(articles) {
 
         return `
             <div class="headline-item ${i === newsActiveIndex ? "headline-item--active" : ""}"
-                 data-index="${i}"
-                 onclick="showArticle(${i})">
+                 data-index="${i}">
                 ${article.image
-                    ? `<img class="headline-thumb" src="${article.image}" alt=""
-                            onerror="this.style.display='none'">`
+                    ? `<img class="headline-thumb" src="${article.image}" alt="">`
                     : `<span class="headline-thumb-empty"></span>`}
                 <span class="headline-cat ${categoryClass}"></span>
                 <div class="headline-content">
@@ -151,6 +157,10 @@ function renderHeadlines(articles) {
             </div>
         `;
     }).join("");
+
+    list.querySelectorAll(".headline-thumb").forEach(img => {
+        img.addEventListener("error", () => { img.style.display = "none"; });
+    });
 }
 
 async function showArticle(index) {
@@ -180,15 +190,14 @@ async function showArticle(index) {
         : "";
 
     viewer.innerHTML = `
-        <div class="article-card" onclick="openModal(${index})">
+        <div class="article-card">
             <div class="article-card__category cat--${article.category}">
                 ${categoryLabel(article.category)}
             </div>
             <div class="article-card__body-wrap">
                 ${article.image ? `
                     <div class="article-card__image--side">
-                        <img src="${article.image}" alt=""
-                             onerror="this.parentElement.style.display='none'" />
+                        <img src="${article.image}" alt="" />
                     </div>
                 ` : ""}
                 <div class="article-card__body">
@@ -205,11 +214,21 @@ async function showArticle(index) {
             </div>
         </div>
         <a href="${article.link}" target="_blank" rel="noopener noreferrer"
-           class="article-external-link"
-           onclick="event.stopPropagation()">
+           class="article-external-link">
             Vollständigen Artikel lesen →
         </a>
     `;
+
+    const card = viewer.querySelector(".article-card");
+    if (card) card.addEventListener("click", () => openModal(index));
+
+    const extLink = viewer.querySelector(".article-external-link");
+    if (extLink) extLink.addEventListener("click", (e) => e.stopPropagation());
+
+    const sideImg = viewer.querySelector(".article-card__image--side img");
+    if (sideImg) sideImg.addEventListener("error", () => {
+        sideImg.parentElement.style.display = "none";
+    });
 }
 
 function openModal(index) {
@@ -282,5 +301,3 @@ function stripHtml(str) {
 }
 
 window.CyberNews = { init: initNews, reload: loadNews };
-window.showArticle = showArticle;
-window.openModal = openModal;

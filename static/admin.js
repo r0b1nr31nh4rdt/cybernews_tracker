@@ -22,6 +22,7 @@ async function initAdmin() {
     });
 
     initTabs();
+    setupDelegation();
     loadSources();
     loadStreams();
 }
@@ -41,6 +42,42 @@ function initTabs() {
     });
 }
 
+// ── Event-Delegation für dynamische Listen ─────────────
+
+function setupDelegation() {
+    const sourcesList = document.getElementById("sources-list");
+    if (sourcesList) {
+        sourcesList.addEventListener("change", (e) => {
+            const cb = e.target.closest('input[type="checkbox"][data-source-id]');
+            if (cb) toggleSource(parseInt(cb.dataset.sourceId), cb.checked);
+        });
+        sourcesList.addEventListener("click", (e) => {
+            const btn = e.target.closest(".source-delete-btn");
+            if (btn) deleteSource(parseInt(btn.dataset.id));
+        });
+    }
+
+    const streamsList = document.getElementById("streams-list");
+    if (streamsList) {
+        streamsList.addEventListener("click", (e) => {
+            const btn = e.target.closest(".stream-delete-btn");
+            if (btn) deleteStream(parseInt(btn.dataset.id));
+        });
+    }
+
+    const usersList = document.getElementById("users-list");
+    if (usersList) {
+        usersList.addEventListener("change", (e) => {
+            const sel = e.target.closest("select.role-select");
+            if (sel) updateRole(parseInt(sel.dataset.userId), sel.value);
+        });
+        usersList.addEventListener("click", (e) => {
+            const btn = e.target.closest(".user-delete-btn");
+            if (btn) deleteUser(parseInt(btn.dataset.id), btn.dataset.username);
+        });
+    }
+}
+
 // ── Quellen ───────────────────────────────────────────
 
 async function loadSources() {
@@ -56,12 +93,10 @@ async function loadSources() {
             <span class="admin-row__name">${s.name}</span>
             <span class="admin-row__url">${s.rss_url}</span>
             <label class="admin-toggle">
-                <input type="checkbox" ${s.active ? "checked" : ""}
-                    onchange="toggleSource(${s.id}, this.checked)" />
+                <input type="checkbox" data-source-id="${s.id}" ${s.active ? "checked" : ""} />
                 <span>${s.active ? "Aktiv" : "Inaktiv"}</span>
             </label>
-            <button class="admin-delete-btn"
-                onclick="deleteSource(${s.id})">Löschen</button>
+            <button class="admin-delete-btn source-delete-btn" data-id="${s.id}">Löschen</button>
         </div>
     `).join("");
 }
@@ -131,8 +166,7 @@ async function loadStreams() {
         <div class="admin-row">
             <span class="admin-row__name">${s.name}</span>
             <span class="admin-row__url">${s.youtube_url}</span>
-            <button class="admin-delete-btn"
-                onclick="deleteStream(${s.id})">Löschen</button>
+            <button class="admin-delete-btn stream-delete-btn" data-id="${s.id}">Löschen</button>
         </div>
     `).join("");
 }
@@ -176,10 +210,6 @@ document.getElementById("stream-save-btn")
         loadStreams();
     });
 
-window.toggleSource = toggleSource;
-window.deleteSource = deleteSource;
-window.deleteStream = deleteStream;
-
 // ── User-Verwaltung ───────────────────────────────────
 
 async function loadUsers() {
@@ -202,13 +232,12 @@ async function loadUsers() {
             <span style="font-size:11px; color:var(--text-muted)">
                 ${u.created_at ? new Date(u.created_at).toLocaleDateString("de-DE") : ""}
             </span>
-            <select class="role-select" data-user-id="${u.id}"
-                onchange="updateRole(${u.id}, this.value)">
+            <select class="role-select" data-user-id="${u.id}">
                 <option value="analyst" ${u.role === 'analyst' ? 'selected' : ''}>Analyst</option>
                 <option value="admin"   ${u.role === 'admin'   ? 'selected' : ''}>Admin</option>
             </select>
-            <button class="admin-delete-btn"
-                onclick="deleteUser(${u.id}, '${u.username}')">Löschen</button>
+            <button class="admin-delete-btn user-delete-btn"
+                data-id="${u.id}" data-username="${u.username}">Löschen</button>
         </div>
     `).join("");
 }
@@ -292,8 +321,5 @@ document.querySelectorAll(".admin-tab").forEach(tab => {
         if (tab.dataset.tab === "audit") loadAudit();
     });
 });
-
-window.updateRole = updateRole;
-window.deleteUser = deleteUser;
 
 document.addEventListener("DOMContentLoaded", initAdmin);

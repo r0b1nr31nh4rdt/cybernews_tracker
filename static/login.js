@@ -111,3 +111,6 @@ function updateNav(me) {
 }
 
 window.CyberLogin = { init: initLoginModal, openModal: openLoginModal, updateNav };
+
+const _footer = document.querySelector("footer");
+if (_footer) _footer.textContent = `© ${new Date().getFullYear()} CyberNews Tracker`;
