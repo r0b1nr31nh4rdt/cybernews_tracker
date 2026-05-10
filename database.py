@@ -57,9 +57,20 @@ def init_db():
         CREATE TABLE IF NOT EXISTS streams (
             id INTEGER PRIMARY KEY,
             name TEXT,
-            youtube_url TEXT
+            youtube_url TEXT,
+            logo TEXT,
+            language TEXT DEFAULT 'both'
         )
     """)
+
+    for migration in [
+        "ALTER TABLE streams ADD COLUMN logo TEXT",
+        "ALTER TABLE streams ADD COLUMN language TEXT DEFAULT 'both'",
+    ]:
+        try:
+            cursor.execute(migration)
+        except Exception:
+            pass
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS audit_log (
@@ -280,18 +291,20 @@ def delete_news_source(source_id):
 
 # ── Streams ───────────────────────────────────────────
 
-def add_stream(name, youtube_url):
+def add_stream(name, youtube_url, logo=None, language="both"):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO streams VALUES (?, ?, ?)",
-                   (None, name, youtube_url))
+    cursor.execute(
+        "INSERT INTO streams (name, youtube_url, logo, language) VALUES (?, ?, ?, ?)",
+        (name, youtube_url, logo, language)
+    )
     conn.commit()
     conn.close()
 
 def get_streams():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM streams")
+    cursor.execute("SELECT id, name, youtube_url, logo, language FROM streams")
     streams = cursor.fetchall()
     conn.close()
     return streams

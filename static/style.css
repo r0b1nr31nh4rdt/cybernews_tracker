@@ -479,24 +479,44 @@ nav a:hover { background: var(--surface-2); color: var(--text); }
 .stream-btn {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text-muted);
-    font-size: 11px;
-    padding: 3px 8px;
+    border-radius: 6px;
+    padding: 4px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 32px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+    color: var(--text-muted);
+    font-size: 10px;
     white-space: nowrap;
+}
+
+.stream-btn img {
+    max-width: 44px;
+    max-height: 24px;
+    object-fit: contain;
+    filter: brightness(0.75);
+    transition: filter 0.15s;
 }
 
 .stream-btn:hover {
     border-color: var(--accent);
-    color: var(--text);
+}
+
+.stream-btn:hover img {
+    filter: brightness(1);
 }
 
 .stream-btn--active {
-    background: var(--accent);
     border-color: var(--accent);
-    color: #000;
-    font-weight: 600;
+    background: var(--surface-2);
+}
+
+.stream-btn--active img {
+    filter: brightness(1);
 }
 
 #stream-error {

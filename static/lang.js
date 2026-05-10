@@ -29,6 +29,7 @@ async function initLang() {
 async function toggleLang() {
     const newLang = window.i18n.getLang() === "de" ? "en" : "de";
     window.i18n.setLang(newLang);
+    if (window.CyberStream) window.CyberStream.reload();
 
     const token = localStorage.getItem("token");
 

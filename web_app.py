@@ -308,11 +308,14 @@ def api_news():
 @app.route("/api/streams", methods=["GET"])
 @jwt_required(optional=True)
 def api_streams():
+    lang = request.args.get("lang", "de")
     streams = get_streams()
-    return jsonify({"streams": [
-        {"id": s[0], "name": s[1], "url": s[2]}
+    filtered = [
+        {"id": s[0], "name": s[1], "url": s[2], "logo": s[3], "language": s[4]}
         for s in streams
-    ]})
+        if s[4] in (lang, "both")
+    ]
+    return jsonify({"streams": filtered})
 
 # --- Admin Helpers ---
 

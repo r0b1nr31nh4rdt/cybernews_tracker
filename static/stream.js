@@ -1,39 +1,60 @@
-let streamHls = null;
+let streamHls  = null;
+let streamList = [];
 
 async function initStream() {
     const container = document.getElementById("stream-buttons");
     if (!container) return;
 
-    let streams = [];
+    const lang = window.i18n?.getLang() || "de";
+
     try {
-        const res = await fetch("/api/streams");
+        const res  = await fetch(`/api/streams?lang=${lang}`);
         const data = await res.json();
-        streams = data.streams || [];
+        streamList = data.streams || [];
     } catch (err) {
         console.error("Streams laden Fehler:", err);
     }
 
-    if (streams.length === 0) {
+    if (streamList.length === 0) {
         const errorEl = document.getElementById("stream-error");
         if (errorEl) errorEl.style.display = "flex";
         return;
     }
 
-    streams.forEach((stream, i) => {
-        const btn = document.createElement("button");
-        btn.textContent = stream.name;
-        btn.className = "stream-btn";
-        btn.dataset.index = i;
-        btn.addEventListener("click", () => loadStream(i, streams));
-        container.appendChild(btn);
-    });
+    renderStreamButtons(streamList);
 
     const savedIndex = parseInt(localStorage.getItem("stream-index") || "0");
-    loadStream(Math.min(savedIndex, streams.length - 1), streams);
+    loadStream(Math.min(savedIndex, streamList.length - 1));
 }
 
-function loadStream(index, streams) {
-    const stream = streams[index];
+function renderStreamButtons(streams) {
+    const container = document.getElementById("stream-buttons");
+    if (!container) return;
+    container.innerHTML = "";
+
+    streams.forEach((stream, i) => {
+        const btn = document.createElement("button");
+        btn.className     = "stream-btn";
+        btn.dataset.index = i;
+        btn.title         = stream.name;
+
+        if (stream.logo) {
+            const img   = document.createElement("img");
+            img.src     = stream.logo;
+            img.alt     = stream.name;
+            img.onerror = () => { img.style.display = "none"; btn.textContent = stream.name; };
+            btn.appendChild(img);
+        } else {
+            btn.textContent = stream.name;
+        }
+
+        btn.addEventListener("click", () => loadStream(i));
+        container.appendChild(btn);
+    });
+}
+
+function loadStream(index) {
+    const stream = streamList[index];
     if (!stream) return;
 
     localStorage.setItem("stream-index", index);
@@ -56,10 +77,7 @@ function loadStream(index, streams) {
     }
 
     if (Hls.isSupported()) {
-        streamHls = new Hls({
-            enableWorker: true,
-            lowLatencyMode: true,
-        });
+        streamHls = new Hls({ enableWorker: true, lowLatencyMode: true });
         streamHls.loadSource(stream.url);
         streamHls.attachMedia(video);
 
@@ -83,4 +101,4 @@ function loadStream(index, streams) {
     }
 }
 
-window.CyberStream = { init: initStream };
+window.CyberStream = { init: initStream, reload: initStream };
