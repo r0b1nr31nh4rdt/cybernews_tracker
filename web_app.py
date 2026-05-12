@@ -25,6 +25,7 @@ from auth import verify_user
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import os
+from seed import seed
 
 load_dotenv()
 
@@ -817,7 +818,7 @@ def agb():
     return render_template("agb.html")
 
 if __name__ == "__main__":
-    init_db()
+    seed()
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
     port  = int(os.getenv("FLASK_PORT", 5001))
     app.run(debug=debug, host="0.0.0.0", port=port)
