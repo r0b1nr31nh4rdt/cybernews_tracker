@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ["CyberWeather", window.CyberWeather],
         ["CyberStocks",  window.CyberStocks],
         ["CyberNews",    window.CyberNews],
+        ["CyberCVE",     window.CyberCVE],
         ["CyberLogin",   window.CyberLogin],
     ]) {
         try {

@@ -2,7 +2,7 @@ const DEFAULT_STATE = {
     hidden: [],
     order: {
         "grid-top":    ["map", "stream", "weather-stocks"],
-        "grid-bottom": ["headlines", "article"]
+        "grid-bottom": ["headlines", "article", "cve"]
     },
     sizes: {}
 };

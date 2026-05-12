@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect
+import re
+from urllib.parse import urljoin, urlparse
 import requests
 from flask_jwt_extended import (
     JWTManager, create_access_token,
@@ -21,7 +23,7 @@ from database import (
 from news_collector import get_articles
 from auth import verify_user
 from dotenv import load_dotenv
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 
 load_dotenv()
@@ -57,6 +59,7 @@ csp = {
     "media-src": [
         "'self'",
         "*",
+        "blob:",
     ],
     "connect-src": [
         "'self'",
@@ -64,9 +67,11 @@ csp = {
         "api.open-meteo.com",
         "geocoding-api.open-meteo.com",
         "nominatim.openstreetmap.org",
+        "*",
     ],
     "font-src": "'self'",
     "frame-src": "'none'",
+    "worker-src": ["blob:"],
 }
 
 Talisman(
@@ -369,6 +374,175 @@ def api_streams():
         if s[4] in (lang, "both")
     ]
     return jsonify({"streams": filtered})
+
+@app.route("/api/cve/today")
+@jwt_required(optional=True)
+def cve_today():
+    try:
+        end   = datetime.utcnow()
+        start = end - timedelta(days=7)
+
+        params = {
+            "cvssV3Severity": "CRITICAL",
+            "pubStartDate":   start.strftime("%Y-%m-%dT%H:%M:%S.000"),
+            "pubEndDate":     end.strftime("%Y-%m-%dT%H:%M:%S.999"),
+            "resultsPerPage": 5,
+        }
+
+        resp = requests.get(
+            "https://services.nvd.nist.gov/rest/json/cves/2.0",
+            params=params,
+            timeout=10,
+            headers={"User-Agent": "CyberNewsTracker/1.0"}
+        )
+        resp.raise_for_status()
+        data  = resp.json()
+        vulns = data.get("vulnerabilities", [])
+
+        if not vulns:
+            params["cvssV3Severity"] = "HIGH"
+            resp  = requests.get(
+                "https://services.nvd.nist.gov/rest/json/cves/2.0",
+                params=params,
+                timeout=10,
+                headers={"User-Agent": "CyberNewsTracker/1.0"}
+            )
+            data  = resp.json()
+            vulns = data.get("vulnerabilities", [])
+
+        if not vulns:
+            return jsonify({"error": "Keine CVEs gefunden"}), 404
+
+        def get_score(v):
+            metrics = v["cve"].get("metrics", {})
+            for key in ["cvssMetricV31", "cvssMetricV30", "cvssMetricV2"]:
+                if key in metrics:
+                    return metrics[key][0]["cvssData"].get("baseScore", 0)
+            return 0
+
+        top  = max(vulns, key=get_score)
+        cve  = top["cve"]
+
+        metrics   = cve.get("metrics", {})
+        cvss_data = {}
+        severity  = "UNKNOWN"
+        score     = None
+
+        for key in ["cvssMetricV31", "cvssMetricV30"]:
+            if key in metrics:
+                m         = metrics[key][0]
+                cvss_data = m["cvssData"]
+                score     = cvss_data.get("baseScore")
+                severity  = cvss_data.get("baseSeverity", "UNKNOWN")
+                break
+
+        descriptions = cve.get("descriptions", [])
+        description  = next(
+            (d["value"] for d in descriptions if d["lang"] == "en"),
+            descriptions[0]["value"] if descriptions else "Keine Beschreibung"
+        )
+
+        configs  = cve.get("configurations", [])
+        products = []
+        for config in configs[:1]:
+            for node in config.get("nodes", [])[:3]:
+                for match in node.get("cpeMatch", [])[:2]:
+                    cpe = match.get("criteria", "")
+                    if cpe:
+                        parts = cpe.split(":")
+                        if len(parts) > 4:
+                            products.append(f"{parts[3]} {parts[4]}")
+
+        return jsonify({
+            "id":            cve["id"],
+            "published":     cve.get("published", ""),
+            "severity":      severity,
+            "score":         score,
+            "description":   description[:500],
+            "attack_vector": cvss_data.get("attackVector", ""),
+            "complexity":    cvss_data.get("attackComplexity", ""),
+            "privileges":    cvss_data.get("privilegesRequired", ""),
+            "products":      products[:3],
+            "nvd_url":       f"https://nvd.nist.gov/vuln/detail/{cve['id']}",
+            "exploitdb_url": f"https://www.exploit-db.com/search?cve={cve['id'].replace('CVE-', '')}",
+        })
+
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "NVD API Timeout"}), 504
+    except Exception as e:
+        app.logger.error(f"CVE Fehler: {e}")
+        return jsonify({"error": "CVE laden fehlgeschlagen"}), 502
+
+
+@app.route("/api/stream-proxy")
+def stream_proxy():
+    url  = request.args.get("url", "")
+    base = request.args.get("base", "")
+    if not url:
+        return jsonify({"error": "Keine URL"}), 400
+    if base and not url.startswith("http"):
+        url = urljoin(base, url)
+    if not url.startswith("http"):
+        return jsonify({"error": "Ungültige URL"}), 400
+    try:
+        resp = requests.get(url, timeout=15, headers={
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+            "Referer":    url,
+            "Origin":     url.split("/")[0] + "//" + url.split("/")[2],
+            "Accept":     "*/*",
+        }, stream=True)
+        content_type = resp.headers.get("Content-Type", "")
+        is_playlist  = (
+            "mpegurl" in content_type.lower() or
+            url.split("?")[0].endswith(".m3u8")
+        )
+        if is_playlist:
+            text     = resp.text
+            base_url = url.rsplit("/", 1)[0] + "/"
+            def rewrite_line(line):
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    if 'URI="' in stripped:
+                        def rewrite_uri(m):
+                            uri = m.group(1)
+                            if not uri.startswith("http"):
+                                uri = urljoin(base_url, uri)
+                            enc      = requests.utils.quote(uri, safe="")
+                            enc_base = requests.utils.quote(base_url, safe="")
+                            return f'URI="/api/stream-proxy?url={enc}&base={enc_base}"'
+                        return re.sub(r'URI="([^"]+)"', rewrite_uri, stripped)
+                    return line
+                abs_url  = urljoin(base_url, stripped)
+                enc      = requests.utils.quote(abs_url, safe="")
+                enc_base = requests.utils.quote(base_url, safe="")
+                return f"/api/stream-proxy?url={enc}&base={enc_base}"
+            rewritten = "\n".join(rewrite_line(l) for l in text.splitlines())
+            response = app.response_class(
+                response=rewritten,
+                status=200,
+                mimetype="application/vnd.apple.mpegurl"
+            )
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Cache-Control"] = "no-cache"
+            return response
+        def generate():
+            for chunk in resp.iter_content(chunk_size=8192):
+                yield chunk
+        response = app.response_class(
+            response=generate(),
+            status=resp.status_code,
+            mimetype=content_type or "video/mp2t"
+        )
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Cache-Control"] = "public, max-age=2"
+        return response
+    except requests.exceptions.Timeout:
+        return jsonify({"error": "Stream Timeout"}), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "Stream nicht erreichbar"}), 502
+    except Exception as e:
+        app.logger.error(f"Stream Proxy Fehler: {e}")
+        return jsonify({"error": "Proxy Fehler"}), 502
 
 # --- Admin Helpers ---
 
