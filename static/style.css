@@ -1339,3 +1339,103 @@ footer {
     color: var(--text-muted);
     border-top: 1px solid var(--border);
 }
+
+/* ── CVE Widget ──────────────────────────────────── */
+.cve-card {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.cve-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.cve-id {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.cve-severity {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.cve-severity--critical { background: #f85149; color: #fff; }
+.cve-severity--high     { background: #e3a008; color: #000; }
+.cve-severity--medium   { background: #a371f7; color: #fff; }
+.cve-severity--low      { background: var(--accent-green); color: #000; }
+
+.cve-date {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.cve-products {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.cve-product-tag {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 11px;
+    padding: 2px 6px;
+    color: var(--text-muted);
+}
+
+.cve-description {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.cve-metrics {
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-radius: 4px;
+    padding: 6px 8px;
+}
+
+.cve-links {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.cve-link {
+    flex: 1;
+    text-align: center;
+    padding: 6px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.cve-link--nvd {
+    background: var(--accent);
+    color: #000;
+}
+
+.cve-link--exploitdb {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.cve-link--exploitdb:hover { border-color: var(--accent-red); }

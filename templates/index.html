@@ -108,6 +108,20 @@
                 </div>
             </div>
         </div>
+
+        <div class="module module--quarter" data-id="cve">
+            <div class="module__header">
+                <span class="module__title">⚠️ CVE des Tages</span>
+                <button class="module__close" data-module="cve" title="Ausblenden">×</button>
+                <button id="cve-refresh" title="Aktualisieren"
+                        style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;margin-left:4px">
+                    ↻
+                </button>
+            </div>
+            <div class="module__body" id="cve-widget">
+                <div class="loading-state"><div class="spinner"></div></div>
+            </div>
+        </div>
     </div>
 </main>
 
@@ -129,5 +143,6 @@
     <script src="/static/weather.js"></script>
     <script src="/static/stocks.js"></script>
     <script src="/static/news.js"></script>
+    <script src="/static/cve.js"></script>
     <script src="/static/dashboard.js"></script>
 {% endblock %}

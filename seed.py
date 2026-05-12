@@ -67,20 +67,10 @@ conn.commit()
 conn.close()
 
 streams = [
-    # DE
-    ("Euronews DE",     "https://rakuten-euronews-4-de.samsung.wurl.tv/playlist.m3u8",                                                                                              "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Euronews_2022.svg/512px-Euronews_2022.svg.png",         "de"),
-    ("DW News DE",      "https://dwamdstream111.akamaized.net/hls/live/2017972/dwstream111/stream05/streamPlaylist.m3u8",                                                            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Deutsche_Welle_Logo.svg/512px-Deutsche_Welle_Logo.svg.png", "de"),
-    ("Tagesschau24",    "https://tagesschau.akamaized.net/hls/live/2020073/tagesschau/master.m3u8",                                                                                 "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Tagesschau_Logo.svg/512px-Tagesschau_Logo.svg.png",    "de"),
-    ("Welt DE",         "https://welt-live.akamaized.net/hls/live/2011222/event1/master.m3u8",                                                                                      "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Die_Welt_Logo.svg/512px-Die_Welt_Logo.svg.png",        "de"),
-    ("Phoenix DE",      "https://zdf-hls-15.akamaized.net/hls/live/2016498/de/high/master.m3u8",                                                                                    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Phoenix_HD_Logo_2018.svg/512px-Phoenix_HD_Logo_2018.svg.png", "de"),
-    # EN
-    ("Sky News EN",     "https://linear901-oo-hls0-prd-gtm.delivery.skycdp.com/17501/sde-fast-skynews/master.m3u8",                                                                 "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Sky-news-logo.svg/512px-Sky-news-logo.svg.png",        "en"),
-    ("Euronews EN",     "https://rakuten-euronews-1-euronewseng-samsunguk.amagi.tv/playlist.m3u8",                                                                                   "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Euronews_2022.svg/512px-Euronews_2022.svg.png",         "en"),
-    ("DW News EN",      "https://dwamdstream107.akamaized.net/hls/live/2017968/dwstream107/stream05/streamPlaylist.m3u8",                                                            "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Deutsche_Welle_Logo.svg/512px-Deutsche_Welle_Logo.svg.png", "en"),
-    ("France 24 EN",    "https://amg00106-france24-france24-samsunguk-qvpp8.amagi.tv/playlist/amg00106-france24-france24-samsunguk/playlist.m3u8",                                  "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/FRANCE_24_logo.svg/512px-FRANCE_24_logo.svg.png",      "en"),
-    ("Al Jazeera EN",   "https://live-hls-web-aje.getaj.net/AJE/index.m3u8",                                                                                                        "https://upload.wikimedia.org/wikipedia/en/thumb/f/f2/Aljazeera_eng.svg/512px-Aljazeera_eng.svg.png",             "en"),
-    ("NHK World EN",    "https://nhkwlive-ojp.akamaized.net/hls/live/2003459/nhkwlive-ojp-en/index.m3u8",                                                                           "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/NHK_World.svg/512px-NHK_World.svg.png",               "en"),
-    ("TRT World EN",    "https://tv-trtworld.live.trt.com.tr/master.m3u8",                                                                                                          "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/TRT_World_logo.svg/512px-TRT_World_logo.svg.png",      "en"),
+    ("Al Jazeera EN", "https://live-hls-web-aje-fa.thehlive.com/AJE/index.m3u8",                                   "/static/logos/aljazeera.svg", "en"),
+    ("DW News EN",    "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/master.m3u8",              "/static/logos/dw.svg",        "en"),
+    ("NHK World EN",  "https://media-tyo.hls.nhkworld.jp/hls/w/live/master.m3u8",                                  "/static/logos/nhk.svg",       "en"),
+    ("Tagesschau DE", "https://tagesschau-live.ard-mcdn.de/tagesschau/live/hls/de/master.m3u8",                    "/static/logos/tagesschau.svg","de"),
 ]
 
 for name, url, logo, language in streams:

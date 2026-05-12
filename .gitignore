@@ -1,6 +1,9 @@
 # Secrets
 .env
 
+# notes
+*.txt
+
 # Claude
 .claude/
 briefing*
