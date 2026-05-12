@@ -817,6 +817,10 @@ def register_page():
 def agb():
     return render_template("agb.html")
 
+with app.app_context():
+    from seed import seed
+    seed()
+
 if __name__ == "__main__":
     seed()
     debug = os.getenv("FLASK_DEBUG", "false").lower() == "true"
