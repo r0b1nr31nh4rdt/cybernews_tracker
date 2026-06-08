@@ -4,7 +4,7 @@ import json
 from urllib.parse import urljoin, urlparse
 import requests
 from flask_jwt_extended import (
-    JWTManager, create_access_token,
+    JWTManager, create_access_token, create_refresh_token,
     jwt_required, get_jwt_identity, get_jwt
 )
 from flask_limiter import Limiter
@@ -34,8 +34,9 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
+app.config["JWT_SECRET_KEY"]              = os.getenv("JWT_SECRET_KEY")
+app.config["JWT_ACCESS_TOKEN_EXPIRES"]  = timedelta(hours=24)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=90)
 jwt = JWTManager(app)
 
 limiter = Limiter(
@@ -145,13 +146,21 @@ def api_login():
     if user:
         cleanup_audit_log()
         log_login_attempt(username, success=True, ip_address=ip)
-        token = create_access_token(
+        access_token  = create_access_token(
             identity=user["username"],
             additional_claims={"role": user["role"]}
         )
-        return jsonify(access_token=token)
+        refresh_token = create_refresh_token(identity=user["username"])
+        return jsonify(access_token=access_token, refresh_token=refresh_token)
     log_login_attempt(username, success=False, ip_address=ip)
     return jsonify({"msg": "Invalid credentials"}), 401
+
+@app.route("/api/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def api_refresh():
+    identity     = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify(access_token=access_token)
 
 @app.route("/api/me", methods=["GET"])
 @jwt_required()
