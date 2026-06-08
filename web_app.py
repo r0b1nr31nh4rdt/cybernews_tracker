@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect
 import re
+import json
 from urllib.parse import urljoin, urlparse
 import requests
 from flask_jwt_extended import (
@@ -19,6 +20,10 @@ from database import (
     get_grid_state, save_grid_state,
     get_user_sources, add_user_source, delete_user_source,
     get_hidden_sources, save_hidden_sources,
+    save_link, get_links, get_link_by_id, update_link_status,
+    set_link_seen, snooze_link, delete_link,
+    detect_content_type, fetch_link_metadata,
+    get_user_ai_settings, save_user_ai_settings, tag_link_with_ai,
 )
 from news_collector import get_articles
 from auth import verify_user
@@ -780,6 +785,205 @@ def profile_delete_user_source(source_id):
     delete_user_source(source_id, db_user[0])
     return jsonify({"success": True})
 
+# --- Link Inbox API ---
+
+@app.route("/api/links", methods=["POST"])
+@jwt_required()
+def api_add_link():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    data = request.json or {}
+    url = data.get("url", "").strip()
+    source_context = data.get("source_context")
+
+    if not url.startswith(("http://", "https://")):
+        return jsonify({"error": "URL muss mit http:// oder https:// beginnen"}), 400
+
+    content_type = detect_content_type(url)
+    metadata = fetch_link_metadata(url)
+
+    title       = metadata.get("title")
+    description = metadata.get("description")
+    tags        = "[]"
+
+    ai_settings = get_user_ai_settings(db_user[0])
+    if ai_settings and ai_settings.get("api_key"):
+        result = tag_link_with_ai(
+            url=url,
+            title=title or "",
+            description=description or "",
+            content_type=content_type,
+            api_key=ai_settings["api_key"],
+            provider=ai_settings.get("provider", "claude"),
+            model=ai_settings.get("model", "claude-haiku-3-5-20251001"),
+        )
+        if result:
+            content_type = result.get("type", content_type)
+            tags = json.dumps(result.get("tags", []))
+
+    link_id = save_link(
+        user_id=db_user[0],
+        url=url,
+        title=title,
+        description=description,
+        image_url=metadata.get("image_url"),
+        content_type=content_type,
+        tags=tags,
+        source_context=source_context,
+    )
+    return jsonify({
+        "id":           link_id,
+        "title":        title,
+        "content_type": content_type,
+        "tags":         json.loads(tags),
+    })
+
+
+@app.route("/api/links", methods=["GET"])
+@jwt_required()
+def api_get_links():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    user_id = db_user[0]
+    rows = get_links(
+        user_id,
+        status_filter=request.args.get("status"),
+        type_filter=request.args.get("type"),
+        tag_filter=request.args.get("tag"),
+        search=request.args.get("q"),
+    )
+    links = [
+        {
+            "id":             row[0],
+            "url":            row[1],
+            "title":          row[2],
+            "description":    row[3],
+            "image_url":      row[4],
+            "content_type":   row[5],
+            "tags":           json.loads(row[6] or "[]"),
+            "status":         row[7],
+            "snoozed_until":  row[8],
+            "created_at":     row[9],
+            "seen_at":        row[10],
+            "source_context": row[11],
+        }
+        for row in rows
+    ]
+    return jsonify({"links": links})
+
+
+@app.route("/api/links/<int:link_id>", methods=["PATCH"])
+@jwt_required()
+def api_update_link(link_id):
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    user_id = db_user[0]
+    data = request.json or {}
+
+    if "snooze_until" in data:
+        snooze_link(link_id, user_id, data["snooze_until"])
+        return jsonify({"success": True})
+
+    if "status" in data:
+        updated = update_link_status(link_id, user_id, data["status"])
+        if not updated:
+            return jsonify({"error": "Link nicht gefunden"}), 404
+        return jsonify({"success": True})
+
+    return jsonify({"error": "Kein gültiges Feld angegeben"}), 400
+
+
+@app.route("/api/links/<int:link_id>", methods=["DELETE"])
+@jwt_required()
+def api_delete_link(link_id):
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    deleted = delete_link(link_id, db_user[0])
+    if not deleted:
+        return jsonify({"error": "Link nicht gefunden"}), 404
+    return jsonify({"success": True})
+
+
+@app.route("/api/links/<int:link_id>/open", methods=["GET"])
+@jwt_required()
+def api_open_link(link_id):
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    user_id = db_user[0]
+    row = get_link_by_id(link_id, user_id)
+    if not row:
+        return jsonify({"error": "Link nicht gefunden"}), 404
+
+    set_link_seen(link_id, user_id)
+    return redirect(row[1])
+
+
+# --- AI Settings API ---
+
+@app.route("/api/settings/ai", methods=["GET"])
+@jwt_required()
+def api_get_ai_settings():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    settings = get_user_ai_settings(db_user[0])
+    if not settings:
+        return jsonify({"configured": False, "provider": None, "model": None})
+    return jsonify({
+        "configured": True,
+        "provider":   settings["provider"],
+        "model":      settings["model"],
+    })
+
+
+@app.route("/api/settings/ai", methods=["POST"])
+@jwt_required()
+def api_save_ai_settings():
+    from database import get_user
+    username = get_jwt_identity()
+    db_user = get_user(username)
+    if not db_user:
+        return jsonify({"error": "User nicht gefunden"}), 404
+
+    data     = request.json or {}
+    provider = data.get("provider", "").strip()
+    model    = data.get("model", "").strip()
+    api_key  = data.get("api_key", "").strip()
+
+    if provider != "claude":
+        return jsonify({"error": "Nur 'claude' wird als Provider unterstützt"}), 400
+    if not api_key:
+        return jsonify({"error": "api_key darf nicht leer sein"}), 400
+    if not model:
+        return jsonify({"error": "model darf nicht leer sein"}), 400
+
+    save_user_ai_settings(db_user[0], provider, model, api_key)
+    return jsonify({"success": True})
+
+
 # --- Register ---
 
 @app.route("/api/register", methods=["POST"])
@@ -803,6 +1007,10 @@ def register():
         return jsonify({"success": True})
     except Exception:
         return jsonify({"error": "Username bereits vergeben"}), 409
+
+@app.route("/inbox")
+def inbox_page():
+    return render_template("inbox.html")
 
 @app.route("/profile")
 def profile_page():

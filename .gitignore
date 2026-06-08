@@ -2,7 +2,11 @@
 .env
 
 # notes
+notes/
 *.txt
+!requirements.txt
+CyberNews_Executive_Summary.docx
+CyberNews_Tracker_Documentation.pdf
 
 # Claude
 .claude/

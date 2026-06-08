@@ -2,6 +2,9 @@ import sqlite3
 import bcrypt
 import json
 import hashlib
+import os
+import requests
+from cryptography.fernet import Fernet
 
 DB_PATH = "users.db"
 
@@ -101,6 +104,36 @@ def init_db():
             source_id INTEGER,
             FOREIGN KEY (user_id) REFERENCES users (id),
             FOREIGN KEY (source_id) REFERENCES news_sources (id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS links (
+            id              INTEGER PRIMARY KEY,
+            user_id         INTEGER NOT NULL,
+            url             TEXT NOT NULL,
+            title           TEXT,
+            description     TEXT,
+            image_url       TEXT,
+            content_type    TEXT DEFAULT 'artikel',
+            tags            TEXT DEFAULT '[]',
+            status          TEXT DEFAULT 'neu',
+            snoozed_until   TEXT,
+            created_at      TEXT DEFAULT (datetime('now')),
+            seen_at         TEXT,
+            source_context  TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_settings (
+            id                    INTEGER PRIMARY KEY,
+            user_id               INTEGER UNIQUE NOT NULL,
+            ai_provider           TEXT DEFAULT 'claude',
+            ai_model              TEXT DEFAULT 'claude-haiku-3-5-20251001',
+            ai_api_key_encrypted  TEXT,
+            FOREIGN KEY (user_id) REFERENCES users (id)
         )
     """)
 
@@ -439,3 +472,291 @@ def save_watchlist(user_id, watchlist):
         hobbies=profile.get("hobbies", []),
         settings=settings
     )
+
+# ── Link Inbox ────────────────────────────────────────
+
+def detect_content_type(url: str) -> str:
+    """Erkennt Content-Typ anhand der URL. Kein HTTP-Request nötig."""
+    url_lower = url.lower()
+    if any(x in url_lower for x in ["youtube.com", "youtu.be", "vimeo.com"]):
+        return "video"
+    if "github.com" in url_lower:
+        return "tool"
+    if "gamma.app" in url_lower:
+        return "präsentation"
+    if url_lower.endswith(".pdf"):
+        return "dokument"
+    return "artikel"
+
+
+def fetch_link_metadata(url: str) -> dict:
+    """Fetcht og:-Metadaten. Gibt leeres Dict zurück bei Fehler."""
+    try:
+        from html.parser import HTMLParser
+
+        class _MetaParser(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.og = {}
+                self._title_text = None
+                self._in_title = False
+
+            def handle_starttag(self, tag, attrs):
+                attrs_dict = dict(attrs)
+                if tag == "meta":
+                    prop = attrs_dict.get("property", "") or attrs_dict.get("name", "")
+                    content = attrs_dict.get("content", "")
+                    if prop == "og:title":
+                        self.og["title"] = content
+                    elif prop == "og:description":
+                        self.og["description"] = content
+                    elif prop == "og:image":
+                        self.og["image_url"] = content
+                elif tag == "title":
+                    self._in_title = True
+
+            def handle_endtag(self, tag):
+                if tag == "title":
+                    self._in_title = False
+
+            def handle_data(self, data):
+                if self._in_title and self._title_text is None:
+                    self._title_text = data.strip()
+
+        resp = requests.get(url, timeout=5, headers={"User-Agent": "CyberNewsTracker/1.0"})
+        resp.raise_for_status()
+
+        parser = _MetaParser()
+        parser.feed(resp.text[:50000])
+
+        result = {}
+        if parser.og.get("title"):
+            result["title"] = parser.og["title"]
+        elif parser._title_text:
+            result["title"] = parser._title_text
+        if parser.og.get("description"):
+            result["description"] = parser.og["description"]
+        if parser.og.get("image_url"):
+            result["image_url"] = parser.og["image_url"]
+        return result
+    except Exception:
+        return {}
+
+
+def save_link(user_id, url, title, description, image_url, content_type, tags="[]", source_context=None) -> int:
+    """Speichert einen Link, gibt die neue id zurück."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """INSERT INTO links (user_id, url, title, description, image_url, content_type, tags, source_context)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (user_id, url, title, description, image_url, content_type, tags, source_context)
+    )
+    link_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return link_id
+
+
+def get_links(user_id, status_filter=None, type_filter=None, tag_filter=None, search=None) -> list:
+    """
+    Gibt Links zurück. Standard: status IN ('neu','gesehen') AND (snoozed_until IS NULL OR snoozed_until < now).
+    Filter sind optional und kombinierbar.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    query = """
+        SELECT id, url, title, description, image_url, content_type, tags, status,
+               snoozed_until, created_at, seen_at, source_context
+        FROM links
+        WHERE user_id = ?
+    """
+    params = [user_id]
+
+    if status_filter:
+        query += " AND status = ?"
+        params.append(status_filter)
+    else:
+        query += " AND status IN ('neu', 'gesehen') AND (snoozed_until IS NULL OR snoozed_until < datetime('now'))"
+
+    if type_filter:
+        query += " AND content_type = ?"
+        params.append(type_filter)
+
+    if tag_filter:
+        query += ' AND tags LIKE ?'
+        params.append(f'%"{tag_filter}"%')
+
+    if search:
+        query += " AND (title LIKE ? OR description LIKE ?)"
+        params.extend([f"%{search}%", f"%{search}%"])
+
+    query += " ORDER BY created_at DESC"
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+
+def get_link_by_id(link_id, user_id):
+    """Gibt einen einzelnen Link zurück, nur wenn user_id stimmt."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, url, title, description, image_url, content_type, tags, status, "
+        "snoozed_until, created_at, seen_at, source_context FROM links WHERE id = ? AND user_id = ?",
+        (link_id, user_id)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    return row
+
+
+def update_link_status(link_id, user_id, status) -> bool:
+    """Setzt status. user_id zur Sicherheit mitprüfen (kein fremder Zugriff)."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE links SET status = ? WHERE id = ? AND user_id = ?",
+        (status, link_id, user_id)
+    )
+    updated = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
+
+
+def set_link_seen(link_id, user_id):
+    """Setzt seen_at = now, status = 'gesehen' — nur wenn seen_at noch NULL."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE links SET seen_at = datetime('now'), status = 'gesehen' "
+        "WHERE id = ? AND user_id = ? AND seen_at IS NULL",
+        (link_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def snooze_link(link_id, user_id, snooze_until_iso: str):
+    """Setzt snoozed_until. Format: ISO-Datetime-String."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE links SET snoozed_until = ? WHERE id = ? AND user_id = ?",
+        (snooze_until_iso, link_id, user_id)
+    )
+    conn.commit()
+    conn.close()
+
+
+def delete_link(link_id, user_id) -> bool:
+    """Löscht Link — nur wenn user_id stimmt."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM links WHERE id = ? AND user_id = ?",
+        (link_id, user_id)
+    )
+    deleted = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
+
+# ── Verschlüsselung ───────────────────────────────────
+
+def _get_fernet() -> Fernet:
+    key = os.getenv("FERNET_KEY")
+    if not key:
+        raise RuntimeError("FERNET_KEY nicht gesetzt")
+    return Fernet(key.encode())
+
+def encrypt_api_key(plaintext: str) -> str:
+    return _get_fernet().encrypt(plaintext.encode()).decode()
+
+def decrypt_api_key(ciphertext: str) -> str:
+    return _get_fernet().decrypt(ciphertext.encode()).decode()
+
+# ── User AI Settings ──────────────────────────────────
+
+def get_user_ai_settings(user_id: int) -> dict | None:
+    """Gibt AI-Settings zurück, API-Key bereits entschlüsselt. None wenn nicht konfiguriert."""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT ai_provider, ai_model, ai_api_key_encrypted FROM user_settings WHERE user_id = ?",
+        (user_id,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+    if not row or not row[2]:
+        return None
+    try:
+        api_key = decrypt_api_key(row[2])
+    except Exception:
+        return None
+    return {"provider": row[0], "model": row[1], "api_key": api_key}
+
+
+def save_user_ai_settings(user_id: int, provider: str, model: str, api_key_plaintext: str):
+    """Speichert oder aktualisiert AI-Settings. Key wird verschlüsselt abgelegt."""
+    encrypted = encrypt_api_key(api_key_plaintext)
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute(
+        """INSERT OR REPLACE INTO user_settings (user_id, ai_provider, ai_model, ai_api_key_encrypted)
+           VALUES (?, ?, ?, ?)""",
+        (user_id, provider, model, encrypted)
+    )
+    conn.commit()
+    conn.close()
+
+# ── KI-Tagging ────────────────────────────────────────
+
+def tag_link_with_ai(
+    url: str,
+    title: str,
+    description: str,
+    content_type: str,
+    api_key: str,
+    provider: str = "claude",
+    model: str = "claude-haiku-3-5-20251001",
+) -> dict:
+    """
+    Ruft die KI-API auf und gibt zurück:
+    { "type": "video|artikel|tool|dokument|präsentation", "tags": ["tag1", "tag2"] }
+    Bei Fehler: leeres Dict, kein Exception-Raise.
+    """
+    try:
+        prompt = (
+            "Du bist ein Klassifikations-Assistent für Cybersecurity-Lernmaterial.\n\n"
+            f"URL: {url}\n"
+            f"Erkannter Typ: {content_type}\n"
+            f"Titel: {title}\n"
+            f"Beschreibung: {description}\n\n"
+            "Antworte NUR mit einem JSON-Objekt, ohne Markdown, ohne Erklärung:\n"
+            '{\n  "type": "video|artikel|tool|dokument|präsentation",\n  "tags": ["tag1", "tag2"]\n}\n\n'
+            "Wähle Tags bevorzugt aus dieser Liste:\n"
+            "OSINT, Forensics, Netzwerk, Malware, Pentest, Kryptographie,\n"
+            "Social Engineering, Cloud, Recht & Compliance, Karriere, Off-Topic\n\n"
+            "Ergänze eigene Tags nur wenn kein passender vorhanden ist.\n"
+            "Maximal 3 Tags."
+        )
+
+        if provider == "claude":
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            response = client.messages.create(
+                model=model,
+                max_tokens=100,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw = response.content[0].text.strip()
+            return json.loads(raw)
+
+        return {}
+    except Exception:
+        return {}

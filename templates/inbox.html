@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox – CyberNews Tracker{% endblock %}
+
+{% block content %}
+  <main id="inbox-main">
+
+    <div id="inbox-toolbar">
+      <input type="text" id="inbox-search" placeholder="Suchen..." />
+      <select id="inbox-filter-type">
+        <option value="">Alle Typen</option>
+        <option value="video">🎬 Video</option>
+        <option value="artikel">📰 Artikel</option>
+        <option value="tool">🔧 Tool</option>
+        <option value="dokument">📄 Dokument</option>
+        <option value="präsentation">📊 Präsentation</option>
+      </select>
+      <select id="inbox-filter-status">
+        <option value="">Offen</option>
+        <option value="neu">Neu</option>
+        <option value="gesehen">Gesehen</option>
+        <option value="archiviert">Archiviert</option>
+      </select>
+    </div>
+
+    <div id="inbox-list"></div>
+
+    <div id="inbox-empty" style="display:none">
+      <p>Keine Links gefunden.</p>
+    </div>
+
+    <section id="inbox-settings">
+      <h3>KI-Tagging</h3>
+      <p id="ai-status"></p>
+      <input type="password" id="ai-api-key" placeholder="Claude API Key (sk-ant-...)" />
+      <select id="ai-model">
+        <option value="claude-haiku-3-5-20251001">Claude Haiku (günstig, schnell)</option>
+        <option value="claude-sonnet-4-6">Claude Sonnet (besser, teurer)</option>
+      </select>
+      <button id="ai-save-btn">Speichern</button>
+      <p id="ai-save-status"></p>
+    </section>
+
+    <section id="inbox-bookmarklet">
+      <h3>📥 Bookmarklet</h3>
+      <p>Ziehe diesen Link in deine Lesezeichen-Leiste:</p>
+      <a id="bookmarklet-link" href="#">📥 Save to Inbox</a>
+      <p><small>Einmalig einrichten — danach reicht ein Klick auf jeder Seite.</small></p>
+    </section>
+
+  </main>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/inbox.js"></script>
+{% endblock %}

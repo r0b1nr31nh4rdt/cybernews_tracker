@@ -92,6 +92,7 @@ function updateNav(me) {
     const logoutLink  = document.getElementById("logout-link");
     const adminLink   = document.getElementById("admin-link");
     const profileLink = document.getElementById("profile-link");
+    const inboxLink   = document.getElementById("inbox-link");
 
     if (me) {
         if (loginBtn)    loginBtn.style.display    = "none";
@@ -102,11 +103,13 @@ function updateNav(me) {
         }
         if (adminLink) adminLink.style.display =
             me.role === "admin" ? "inline" : "none";
+        if (inboxLink)   inboxLink.style.display    = "inline";
     } else {
         if (loginBtn)    loginBtn.style.display    = "inline";
         if (logoutLink)  logoutLink.style.display   = "none";
         if (profileLink) profileLink.style.display  = "none";
         if (adminLink)   adminLink.style.display    = "none";
+        if (inboxLink)   inboxLink.style.display    = "none";
     }
 }
 
